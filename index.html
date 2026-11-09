@@ -1,0 +1,2857 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cámara de Obra</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cámara Obra">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#596A85">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icono-180.png">
+<style>
+:root{--gris:#596A85;--naranja:#EFA723;--tinta:#1f2328;--suave:#6b7280;--linea:#dfe3ea;--fondo:#f4f6f9;--panel:#fff;--ok:#2f7d4a;--mal:#b3261e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--tinta);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding:max(12px,env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+header h1{font-size:19px;margin:0;color:var(--gris)}
+header small{display:block;color:var(--suave);font-weight:400;font-size:13px}
+button,select,input,textarea{font:inherit;color:inherit}
+.icono{border:0;background:none;font-size:24px;padding:6px 8px;color:var(--gris)}
+.tarjeta{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:14px;margin-bottom:12px}
+.rotulo{font-size:13px;font-weight:600;color:var(--suave);text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px}
+#titulo{width:100%;font-size:22px;font-weight:700;padding:12px;border:2px solid var(--gris);border-radius:10px;background:#fff}
+#titulo:focus{outline:none;border-color:var(--naranja)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;max-height:168px;overflow:auto}
+.chip{border:1px solid var(--linea);background:#f8f9fb;border-radius:999px;padding:7px 12px;font-size:15px}
+.chip.activo{background:var(--gris);color:#fff;border-color:var(--gris)}
+#disparar{width:100%;border:0;border-radius:16px;background:var(--naranja);color:#1f2328;font-size:21px;font-weight:700;padding:20px;display:flex;align-items:center;justify-content:center;gap:10px}
+#disparar:disabled{opacity:.5}
+.estado{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--suave);margin-top:10px}
+.estado b{color:var(--tinta);font-weight:600}
+.punto{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mal);margin-right:5px;vertical-align:middle}
+.punto.ok{background:var(--ok)}
+#bandeja{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#bandeja figure{margin:0;position:relative}
+#bandeja img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block;background:#ddd}
+#bandeja figcaption{font-size:11px;color:var(--suave);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}
+#bandeja button{position:absolute;top:4px;right:4px;border:0;border-radius:50%;width:26px;height:26px;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:26px;padding:0}
+.fila{display:flex;gap:8px;margin-top:12px}
+.fila button{flex:1;border-radius:12px;padding:13px;font-weight:600;border:1px solid var(--gris);background:#fff;color:var(--gris)}
+.fila button.primario{background:var(--gris);color:#fff}
+.fila button:disabled{opacity:.4}
+.vacio{color:var(--suave);font-size:14px;margin:0}
+dialog{border:0;border-radius:16px;padding:0;width:min(560px,94vw);max-height:90vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg{padding:16px;overflow:auto;max-height:86vh}
+.dlg h2{margin:0 0 12px;font-size:19px;color:var(--gris)}
+.campo{margin-bottom:12px}
+.campo label{display:block;font-size:14px;font-weight:600;margin-bottom:4px}
+.campo input,.campo select,.campo textarea{width:100%;padding:10px;border:1px solid var(--linea);border-radius:9px;background:#fff}
+.campo .ayuda{font-size:13px;color:var(--suave);margin-top:3px}
+.check{display:flex;align-items:center;gap:10px;margin:8px 0}
+.check input{width:22px;height:22px}
+#aviso{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));background:#1f2328;color:#fff;padding:12px 14px;border-radius:12px;font-size:15px;display:none;z-index:9}
+#procesando{display:none;color:var(--gris);font-weight:600;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cámara de Obra<small id="obraActual">—</small></h1>
+  <button class="icono" id="abrirAjustes" aria-label="Ajustes">⚙︎</button>
+</header>
+
+<section class="tarjeta">
+  <p class="rotulo">Título de la foto</p>
+  <input id="titulo" autocomplete="off" autocapitalize="sentences" placeholder="Ej: Acero Col A7" list="listaTitulos">
+  <datalist id="listaTitulos"></datalist>
+  <div class="chips" id="chips"></div>
+</section>
+
+<button id="disparar">📷 Tomar foto</button>
+<input type="file" id="camara" accept="image/*" capture="environment" hidden>
+<div id="procesando">Estampando la foto…</div>
+<div class="estado">
+  <span><span class="punto" id="ptoGps"></span><b id="txtGps">Buscando GPS…</b></span>
+  <span id="txtLugar"></span>
+  <span id="txtClima"></span>
+</div>
+
+<section class="tarjeta" style="margin-top:14px">
+  <p class="rotulo">Por guardar (<span id="nPend">0</span>)</p>
+  <div id="bandeja"></div>
+  <p class="vacio" id="vacio">Las fotos que tomes aparecen aquí. Guárdalas en Fotos cuando quieras (puedes guardar varias a la vez).</p>
+  <div class="fila">
+    <button class="primario" id="guardar" disabled>Guardar en Fotos</button>
+    <button id="limpiar" disabled>Vaciar</button>
+  </div>
+</section>
+
+<dialog id="ajustes"><div class="dlg">
+  <h2>Ajustes</h2>
+  <div class="campo"><label for="selObra">Obra</label>
+    <select id="selObra"></select>
+    <div class="fila" style="margin-top:8px"><button id="nuevaObra">Nueva obra</button><button id="borrarObra">Borrar obra</button></div></div>
+  <div class="campo"><label for="nomObra">Nombre de la obra</label><input id="nomObra" placeholder="Tierra Grata Ambarte"></div>
+  <div class="campo"><label for="lugarFijo">Ubicación (si no hay señal)</label><input id="lugarFijo" placeholder="Cuchillas de San José, Rionegro, Antioquia">
+    <div class="ayuda">Con señal, la app toma la ubicación del GPS; sin señal, usa este texto.</div></div>
+  <div class="campo"><label for="usuario">Quién toma las fotos</label><input id="usuario" placeholder="Sebastián Narváez"></div>
+  <label class="check"><input type="checkbox" id="optClima"> Mostrar clima en la foto (necesita señal)</label>
+  <label class="check"><input type="checkbox" id="optLogo"> Logo de Lucía &amp; Co. en la foto</label>
+  <div class="campo"><label for="calidad">Calidad JPG</label>
+    <select id="calidad"><option value="0.92">Alta (recomendada)</option><option value="0.85">Media (archivos más livianos)</option></select></div>
+  <div class="campo"><label for="txtTitulos">Lista de títulos de esta obra</label>
+    <textarea id="txtTitulos" rows="6" placeholder="Un título por línea"></textarea>
+    <div class="ayuda">Pega o edita la lista (un título por línea). También puedes cargar un archivo .txt.</div>
+    <div class="fila"><button id="cargarTxt">Cargar .txt</button><button id="exportarTxt">Compartir lista</button></div>
+    <input type="file" id="archivoTxt" accept=".txt,text/plain" hidden></div>
+  <div class="fila"><button id="cerrarAjustes" class="primario">Listo</button></div>
+  <p class="vacio" style="margin-top:12px">Versión <span id="version"></span></p>
+</div></dialog>
+
+<div id="aviso" role="status"></div>
+
+<script>/* piexifjs 1.0.6 - MIT License (c) 2014 Hiroaki Matoba */
+/* piexifjs
+
+The MIT License (MIT)
+
+Copyright (c) 2014, 2015 hMatoba(https://github.com/hMatoba)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+(function () {
+    "use strict";
+    var that = {};
+    that.version = "1.0.4";
+
+    that.remove = function (jpeg) {
+        var b64 = false;
+        if (jpeg.slice(0, 2) == "\xff\xd8") {
+        } else if (jpeg.slice(0, 23) == "data:image/jpeg;base64," || jpeg.slice(0, 22) == "data:image/jpg;base64,") {
+            jpeg = atob(jpeg.split(",")[1]);
+            b64 = true;
+        } else {
+            throw new Error("Given data is not jpeg.");
+        }
+        
+        var segments = splitIntoSegments(jpeg);
+        var newSegments = segments.filter(function(seg){
+          return  !(seg.slice(0, 2) == "\xff\xe1" &&
+                   seg.slice(4, 10) == "Exif\x00\x00"); 
+        });
+        
+        var new_data = newSegments.join("");
+        if (b64) {
+            new_data = "data:image/jpeg;base64," + btoa(new_data);
+        }
+
+        return new_data;
+    };
+
+
+    that.insert = function (exif, jpeg) {
+        var b64 = false;
+        if (exif.slice(0, 6) != "\x45\x78\x69\x66\x00\x00") {
+            throw new Error("Given data is not exif.");
+        }
+        if (jpeg.slice(0, 2) == "\xff\xd8") {
+        } else if (jpeg.slice(0, 23) == "data:image/jpeg;base64," || jpeg.slice(0, 22) == "data:image/jpg;base64,") {
+            jpeg = atob(jpeg.split(",")[1]);
+            b64 = true;
+        } else {
+            throw new Error("Given data is not jpeg.");
+        }
+
+        var exifStr = "\xff\xe1" + pack(">H", [exif.length + 2]) + exif;
+        var segments = splitIntoSegments(jpeg);
+        var new_data = mergeSegments(segments, exifStr);
+        if (b64) {
+            new_data = "data:image/jpeg;base64," + btoa(new_data);
+        }
+
+        return new_data;
+    };
+
+
+    that.load = function (data) {
+        var input_data;
+        if (typeof (data) == "string") {
+            if (data.slice(0, 2) == "\xff\xd8") {
+                input_data = data;
+            } else if (data.slice(0, 23) == "data:image/jpeg;base64," || data.slice(0, 22) == "data:image/jpg;base64,") {
+                input_data = atob(data.split(",")[1]);
+            } else if (data.slice(0, 4) == "Exif") {
+                input_data = data.slice(6);
+            } else {
+                throw new Error("'load' gots invalid file data.");
+            }
+        } else {
+            throw new Error("'load' gots invalid type argument.");
+        }
+
+        var exifDict = {};
+        var exif_dict = {
+            "0th": {},
+            "Exif": {},
+            "GPS": {},
+            "Interop": {},
+            "1st": {},
+            "thumbnail": null
+        };
+        var exifReader = new ExifReader(input_data);
+        if (exifReader.tiftag === null) {
+            return exif_dict;
+        }
+
+        if (exifReader.tiftag.slice(0, 2) == "\x49\x49") {
+            exifReader.endian_mark = "<";
+        } else {
+            exifReader.endian_mark = ">";
+        }
+
+        var pointer = unpack(exifReader.endian_mark + "L",
+            exifReader.tiftag.slice(4, 8))[0];
+        exif_dict["0th"] = exifReader.get_ifd(pointer, "0th");
+
+        var first_ifd_pointer = exif_dict["0th"]["first_ifd_pointer"];
+        delete exif_dict["0th"]["first_ifd_pointer"];
+
+        if (34665 in exif_dict["0th"]) {
+            pointer = exif_dict["0th"][34665];
+            exif_dict["Exif"] = exifReader.get_ifd(pointer, "Exif");
+        }
+        if (34853 in exif_dict["0th"]) {
+            pointer = exif_dict["0th"][34853];
+            exif_dict["GPS"] = exifReader.get_ifd(pointer, "GPS");
+        }
+        if (40965 in exif_dict["Exif"]) {
+            pointer = exif_dict["Exif"][40965];
+            exif_dict["Interop"] = exifReader.get_ifd(pointer, "Interop");
+        }
+        if (first_ifd_pointer != "\x00\x00\x00\x00") {
+            pointer = unpack(exifReader.endian_mark + "L",
+                first_ifd_pointer)[0];
+            exif_dict["1st"] = exifReader.get_ifd(pointer, "1st");
+            if ((513 in exif_dict["1st"]) && (514 in exif_dict["1st"])) {
+                var end = exif_dict["1st"][513] + exif_dict["1st"][514];
+                var thumb = exifReader.tiftag.slice(exif_dict["1st"][513], end);
+                exif_dict["thumbnail"] = thumb;
+            }
+        }
+
+        return exif_dict;
+    };
+
+
+    that.dump = function (exif_dict_original) {
+        var TIFF_HEADER_LENGTH = 8;
+
+        var exif_dict = copy(exif_dict_original);
+        var header = "Exif\x00\x00\x4d\x4d\x00\x2a\x00\x00\x00\x08";
+        var exif_is = false;
+        var gps_is = false;
+        var interop_is = false;
+        var first_is = false;
+
+        var zeroth_ifd,
+            exif_ifd,
+            interop_ifd,
+            gps_ifd,
+            first_ifd;
+        
+        if ("0th" in exif_dict) {
+            zeroth_ifd = exif_dict["0th"];
+        } else {
+            zeroth_ifd = {};
+        }
+        
+        if ((("Exif" in exif_dict) && (Object.keys(exif_dict["Exif"]).length)) ||
+            (("Interop" in exif_dict) && (Object.keys(exif_dict["Interop"]).length))) {
+            zeroth_ifd[34665] = 1;
+            exif_is = true;
+            exif_ifd = exif_dict["Exif"];
+            if (("Interop" in exif_dict) && Object.keys(exif_dict["Interop"]).length) {
+                exif_ifd[40965] = 1;
+                interop_is = true;
+                interop_ifd = exif_dict["Interop"];
+            } else if (Object.keys(exif_ifd).indexOf(that.ExifIFD.InteroperabilityTag.toString()) > -1) {
+                delete exif_ifd[40965];
+            }
+        } else if (Object.keys(zeroth_ifd).indexOf(that.ImageIFD.ExifTag.toString()) > -1) {
+            delete zeroth_ifd[34665];
+        }
+
+        if (("GPS" in exif_dict) && (Object.keys(exif_dict["GPS"]).length)) {
+            zeroth_ifd[that.ImageIFD.GPSTag] = 1;
+            gps_is = true;
+            gps_ifd = exif_dict["GPS"];
+        } else if (Object.keys(zeroth_ifd).indexOf(that.ImageIFD.GPSTag.toString()) > -1) {
+            delete zeroth_ifd[that.ImageIFD.GPSTag];
+        }
+        
+        if (("1st" in exif_dict) &&
+            ("thumbnail" in exif_dict) &&
+            (exif_dict["thumbnail"] != null)) {
+            first_is = true;
+            exif_dict["1st"][513] = 1;
+            exif_dict["1st"][514] = 1;
+            first_ifd = exif_dict["1st"];
+        }
+        
+        var zeroth_set = _dict_to_bytes(zeroth_ifd, "0th", 0);
+        var zeroth_length = (zeroth_set[0].length + exif_is * 12 + gps_is * 12 + 4 +
+            zeroth_set[1].length);
+
+        var exif_set,
+            exif_bytes = "",
+            exif_length = 0,
+            gps_set,
+            gps_bytes = "",
+            gps_length = 0,
+            interop_set,
+            interop_bytes = "",
+            interop_length = 0,
+            first_set,
+            first_bytes = "",
+            thumbnail;
+        if (exif_is) {
+            exif_set = _dict_to_bytes(exif_ifd, "Exif", zeroth_length);
+            exif_length = exif_set[0].length + interop_is * 12 + exif_set[1].length;
+        }
+        if (gps_is) {
+            gps_set = _dict_to_bytes(gps_ifd, "GPS", zeroth_length + exif_length);
+            gps_bytes = gps_set.join("");
+            gps_length = gps_bytes.length;
+        }
+        if (interop_is) {
+            var offset = zeroth_length + exif_length + gps_length;
+            interop_set = _dict_to_bytes(interop_ifd, "Interop", offset);
+            interop_bytes = interop_set.join("");
+            interop_length = interop_bytes.length;
+        }
+        if (first_is) {
+            var offset = zeroth_length + exif_length + gps_length + interop_length;
+            first_set = _dict_to_bytes(first_ifd, "1st", offset);
+            thumbnail = _get_thumbnail(exif_dict["thumbnail"]);
+            if (thumbnail.length > 64000) {
+                throw new Error("Given thumbnail is too large. max 64kB");
+            }
+        }
+
+        var exif_pointer = "",
+            gps_pointer = "",
+            interop_pointer = "",
+            first_ifd_pointer = "\x00\x00\x00\x00";
+        if (exif_is) {
+            var pointer_value = TIFF_HEADER_LENGTH + zeroth_length;
+            var pointer_str = pack(">L", [pointer_value]);
+            var key = 34665;
+            var key_str = pack(">H", [key]);
+            var type_str = pack(">H", [TYPES["Long"]]);
+            var length_str = pack(">L", [1]);
+            exif_pointer = key_str + type_str + length_str + pointer_str;
+        }
+        if (gps_is) {
+            var pointer_value = TIFF_HEADER_LENGTH + zeroth_length + exif_length;
+            var pointer_str = pack(">L", [pointer_value]);
+            var key = 34853;
+            var key_str = pack(">H", [key]);
+            var type_str = pack(">H", [TYPES["Long"]]);
+            var length_str = pack(">L", [1]);
+            gps_pointer = key_str + type_str + length_str + pointer_str;
+        }
+        if (interop_is) {
+            var pointer_value = (TIFF_HEADER_LENGTH +
+                zeroth_length + exif_length + gps_length);
+            var pointer_str = pack(">L", [pointer_value]);
+            var key = 40965;
+            var key_str = pack(">H", [key]);
+            var type_str = pack(">H", [TYPES["Long"]]);
+            var length_str = pack(">L", [1]);
+            interop_pointer = key_str + type_str + length_str + pointer_str;
+        }
+        if (first_is) {
+            var pointer_value = (TIFF_HEADER_LENGTH + zeroth_length +
+                exif_length + gps_length + interop_length);
+            first_ifd_pointer = pack(">L", [pointer_value]);
+            var thumbnail_pointer = (pointer_value + first_set[0].length + 24 +
+                4 + first_set[1].length);
+            var thumbnail_p_bytes = ("\x02\x01\x00\x04\x00\x00\x00\x01" +
+                pack(">L", [thumbnail_pointer]));
+            var thumbnail_length_bytes = ("\x02\x02\x00\x04\x00\x00\x00\x01" +
+                pack(">L", [thumbnail.length]));
+            first_bytes = (first_set[0] + thumbnail_p_bytes +
+                thumbnail_length_bytes + "\x00\x00\x00\x00" +
+                first_set[1] + thumbnail);
+        }
+
+        var zeroth_bytes = (zeroth_set[0] + exif_pointer + gps_pointer +
+            first_ifd_pointer + zeroth_set[1]);
+        if (exif_is) {
+            exif_bytes = exif_set[0] + interop_pointer + exif_set[1];
+        }
+
+        return (header + zeroth_bytes + exif_bytes + gps_bytes +
+            interop_bytes + first_bytes);
+    };
+
+
+    function copy(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+
+
+    function _get_thumbnail(jpeg) {
+        var segments = splitIntoSegments(jpeg);
+        while (("\xff\xe0" <= segments[1].slice(0, 2)) && (segments[1].slice(0, 2) <= "\xff\xef")) {
+            segments = [segments[0]].concat(segments.slice(2));
+        }
+        return segments.join("");
+    }
+
+
+    function _pack_byte(array) {
+        return pack(">" + nStr("B", array.length), array);
+    }
+
+
+    function _pack_short(array) {
+        return pack(">" + nStr("H", array.length), array);
+    }
+
+
+    function _pack_long(array) {
+        return pack(">" + nStr("L", array.length), array);
+    }
+
+
+    function _value_to_bytes(raw_value, value_type, offset) {
+        var four_bytes_over = "";
+        var value_str = "";
+        var length,
+            new_value,
+            num,
+            den;
+
+        if (value_type == "Byte") {
+            length = raw_value.length;
+            if (length <= 4) {
+                value_str = (_pack_byte(raw_value) +
+                    nStr("\x00", 4 - length));
+            } else {
+                value_str = pack(">L", [offset]);
+                four_bytes_over = _pack_byte(raw_value);
+            }
+        } else if (value_type == "Short") {
+            length = raw_value.length;
+            if (length <= 2) {
+                value_str = (_pack_short(raw_value) +
+                    nStr("\x00\x00", 2 - length));
+            } else {
+                value_str = pack(">L", [offset]);
+                four_bytes_over = _pack_short(raw_value);
+            }
+        } else if (value_type == "Long") {
+            length = raw_value.length;
+            if (length <= 1) {
+                value_str = _pack_long(raw_value);
+            } else {
+                value_str = pack(">L", [offset]);
+                four_bytes_over = _pack_long(raw_value);
+            }
+        } else if (value_type == "Ascii") {
+            new_value = raw_value + "\x00";
+            length = new_value.length;
+            if (length > 4) {
+                value_str = pack(">L", [offset]);
+                four_bytes_over = new_value;
+            } else {
+                value_str = new_value + nStr("\x00", 4 - length);
+            }
+        } else if (value_type == "Rational") {
+            if (typeof (raw_value[0]) == "number") {
+                length = 1;
+                num = raw_value[0];
+                den = raw_value[1];
+                new_value = pack(">L", [num]) + pack(">L", [den]);
+            } else {
+                length = raw_value.length;
+                new_value = "";
+                for (var n = 0; n < length; n++) {
+                    num = raw_value[n][0];
+                    den = raw_value[n][1];
+                    new_value += (pack(">L", [num]) +
+                        pack(">L", [den]));
+                }
+            }
+            value_str = pack(">L", [offset]);
+            four_bytes_over = new_value;
+        } else if (value_type == "SRational") {
+            if (typeof (raw_value[0]) == "number") {
+                length = 1;
+                num = raw_value[0];
+                den = raw_value[1];
+                new_value = pack(">l", [num]) + pack(">l", [den]);
+            } else {
+                length = raw_value.length;
+                new_value = "";
+                for (var n = 0; n < length; n++) {
+                    num = raw_value[n][0];
+                    den = raw_value[n][1];
+                    new_value += (pack(">l", [num]) +
+                        pack(">l", [den]));
+                }
+            }
+            value_str = pack(">L", [offset]);
+            four_bytes_over = new_value;
+        } else if (value_type == "Undefined") {
+            length = raw_value.length;
+            if (length > 4) {
+                value_str = pack(">L", [offset]);
+                four_bytes_over = raw_value;
+            } else {
+                value_str = raw_value + nStr("\x00", 4 - length);
+            }
+        }
+
+        var length_str = pack(">L", [length]);
+
+        return [length_str, value_str, four_bytes_over];
+    }
+
+    function _dict_to_bytes(ifd_dict, ifd, ifd_offset) {
+        var TIFF_HEADER_LENGTH = 8;
+        var tag_count = Object.keys(ifd_dict).length;
+        var entry_header = pack(">H", [tag_count]);
+        var entries_length;
+        if (["0th", "1st"].indexOf(ifd) > -1) {
+            entries_length = 2 + tag_count * 12 + 4;
+        } else {
+            entries_length = 2 + tag_count * 12;
+        }
+        var entries = "";
+        var values = "";
+        var key;
+
+        for (var key in ifd_dict) {
+            if (typeof (key) == "string") {
+                key = parseInt(key);
+            }
+            if ((ifd == "0th") && ([34665, 34853].indexOf(key) > -1)) {
+                continue;
+            } else if ((ifd == "Exif") && (key == 40965)) {
+                continue;
+            } else if ((ifd == "1st") && ([513, 514].indexOf(key) > -1)) {
+                continue;
+            }
+
+            var raw_value = ifd_dict[key];
+            var key_str = pack(">H", [key]);
+            var value_type = TAGS[ifd][key]["type"];
+            var type_str = pack(">H", [TYPES[value_type]]);
+
+            if (typeof (raw_value) == "number") {
+                raw_value = [raw_value];
+            }
+            var offset = TIFF_HEADER_LENGTH + entries_length + ifd_offset + values.length;
+            var b = _value_to_bytes(raw_value, value_type, offset);
+            var length_str = b[0];
+            var value_str = b[1];
+            var four_bytes_over = b[2];
+
+            entries += key_str + type_str + length_str + value_str;
+            values += four_bytes_over;
+        }
+
+        return [entry_header + entries, values];
+    }
+
+
+
+    function ExifReader(data) {
+        var segments,
+            app1;
+        if (data.slice(0, 2) == "\xff\xd8") { // JPEG
+            segments = splitIntoSegments(data);
+            app1 = getExifSeg(segments);
+            if (app1) {
+                this.tiftag = app1.slice(10);
+            } else {
+                this.tiftag = null;
+            }
+        } else if (["\x49\x49", "\x4d\x4d"].indexOf(data.slice(0, 2)) > -1) { // TIFF
+            this.tiftag = data;
+        } else if (data.slice(0, 4) == "Exif") { // Exif
+            this.tiftag = data.slice(6);
+        } else {
+            throw new Error("Given file is neither JPEG nor TIFF.");
+        }
+    }
+
+    ExifReader.prototype = {
+        get_ifd: function (pointer, ifd_name) {
+            var ifd_dict = {};
+            var tag_count = unpack(this.endian_mark + "H",
+                this.tiftag.slice(pointer, pointer + 2))[0];
+            var offset = pointer + 2;
+            var t;
+            if (["0th", "1st"].indexOf(ifd_name) > -1) {
+                t = "Image";
+            } else {
+                t = ifd_name;
+            }
+
+            for (var x = 0; x < tag_count; x++) {
+                pointer = offset + 12 * x;
+                var tag = unpack(this.endian_mark + "H",
+                    this.tiftag.slice(pointer, pointer + 2))[0];
+                var value_type = unpack(this.endian_mark + "H",
+                    this.tiftag.slice(pointer + 2, pointer + 4))[0];
+                var value_num = unpack(this.endian_mark + "L",
+                    this.tiftag.slice(pointer + 4, pointer + 8))[0];
+                var value = this.tiftag.slice(pointer + 8, pointer + 12);
+
+                var v_set = [value_type, value_num, value];
+                if (tag in TAGS[t]) {
+                    ifd_dict[tag] = this.convert_value(v_set);
+                }
+            }
+
+            if (ifd_name == "0th") {
+                pointer = offset + 12 * tag_count;
+                ifd_dict["first_ifd_pointer"] = this.tiftag.slice(pointer, pointer + 4);
+            }
+
+            return ifd_dict;
+        },
+
+        convert_value: function (val) {
+            var data = null;
+            var t = val[0];
+            var length = val[1];
+            var value = val[2];
+            var pointer;
+
+            if (t == 1) { // BYTE
+                if (length > 4) {
+                    pointer = unpack(this.endian_mark + "L", value)[0];
+                    data = unpack(this.endian_mark + nStr("B", length),
+                        this.tiftag.slice(pointer, pointer + length));
+                } else {
+                    data = unpack(this.endian_mark + nStr("B", length), value.slice(0, length));
+                }
+            } else if (t == 2) { // ASCII
+                if (length > 4) {
+                    pointer = unpack(this.endian_mark + "L", value)[0];
+                    data = this.tiftag.slice(pointer, pointer + length - 1);
+                } else {
+                    data = value.slice(0, length - 1);
+                }
+            } else if (t == 3) { // SHORT
+                if (length > 2) {
+                    pointer = unpack(this.endian_mark + "L", value)[0];
+                    data = unpack(this.endian_mark + nStr("H", length),
+                        this.tiftag.slice(pointer, pointer + length * 2));
+                } else {
+                    data = unpack(this.endian_mark + nStr("H", length),
+                        value.slice(0, length * 2));
+                }
+            } else if (t == 4) { // LONG
+                if (length > 1) {
+                    pointer = unpack(this.endian_mark + "L", value)[0];
+                    data = unpack(this.endian_mark + nStr("L", length),
+                        this.tiftag.slice(pointer, pointer + length * 4));
+                } else {
+                    data = unpack(this.endian_mark + nStr("L", length),
+                        value);
+                }
+            } else if (t == 5) { // RATIONAL
+                pointer = unpack(this.endian_mark + "L", value)[0];
+                if (length > 1) {
+                    data = [];
+                    for (var x = 0; x < length; x++) {
+                        data.push([unpack(this.endian_mark + "L",
+                                this.tiftag.slice(pointer + x * 8, pointer + 4 + x * 8))[0],
+                                   unpack(this.endian_mark + "L",
+                                this.tiftag.slice(pointer + 4 + x * 8, pointer + 8 + x * 8))[0]
+                                   ]);
+                    }
+                } else {
+                    data = [unpack(this.endian_mark + "L",
+                            this.tiftag.slice(pointer, pointer + 4))[0],
+                            unpack(this.endian_mark + "L",
+                            this.tiftag.slice(pointer + 4, pointer + 8))[0]
+                            ];
+                }
+            } else if (t == 7) { // UNDEFINED BYTES
+                if (length > 4) {
+                    pointer = unpack(this.endian_mark + "L", value)[0];
+                    data = this.tiftag.slice(pointer, pointer + length);
+                } else {
+                    data = value.slice(0, length);
+                }
+            } else if (t == 9) { // SLONG
+                if (length > 1) {
+                    pointer = unpack(this.endian_mark + "L", value)[0];
+                    data = unpack(this.endian_mark + nStr("l", length),
+                        this.tiftag.slice(pointer, pointer + length * 4));
+                } else {
+                    data = unpack(this.endian_mark + nStr("l", length),
+                        value);
+                }
+            } else if (t == 10) { // SRATIONAL
+                pointer = unpack(this.endian_mark + "L", value)[0];
+                if (length > 1) {
+                    data = [];
+                    for (var x = 0; x < length; x++) {
+                        data.push([unpack(this.endian_mark + "l",
+                                this.tiftag.slice(pointer + x * 8, pointer + 4 + x * 8))[0],
+                                   unpack(this.endian_mark + "l",
+                                this.tiftag.slice(pointer + 4 + x * 8, pointer + 8 + x * 8))[0]
+                                  ]);
+                    }
+                } else {
+                    data = [unpack(this.endian_mark + "l",
+                            this.tiftag.slice(pointer, pointer + 4))[0],
+                            unpack(this.endian_mark + "l",
+                            this.tiftag.slice(pointer + 4, pointer + 8))[0]
+                           ];
+                }
+            } else {
+                throw new Error("Exif might be wrong. Got incorrect value " +
+                    "type to decode. type:" + t);
+            }
+
+            if ((data instanceof Array) && (data.length == 1)) {
+                return data[0];
+            } else {
+                return data;
+            }
+        },
+    };
+
+
+    if (typeof window !== "undefined" && typeof window.btoa === "function") {
+        var btoa = window.btoa;
+    }
+    if (typeof btoa === "undefined") {
+        var btoa = function (input) {        var output = "";
+            var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+            var i = 0;
+            var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+            while (i < input.length) {
+
+                chr1 = input.charCodeAt(i++);
+                chr2 = input.charCodeAt(i++);
+                chr3 = input.charCodeAt(i++);
+
+                enc1 = chr1 >> 2;
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                enc4 = chr3 & 63;
+
+                if (isNaN(chr2)) {
+                    enc3 = enc4 = 64;
+                } else if (isNaN(chr3)) {
+                    enc4 = 64;
+                }
+
+                output = output +
+                keyStr.charAt(enc1) + keyStr.charAt(enc2) +
+                keyStr.charAt(enc3) + keyStr.charAt(enc4);
+
+            }
+
+            return output;
+        };
+    }
+    
+    
+    if (typeof window !== "undefined" && typeof window.atob === "function") {
+        var atob = window.atob;
+    }
+    if (typeof atob === "undefined") {
+        var atob = function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+            var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+            while (i < input.length) {
+
+                enc1 = keyStr.indexOf(input.charAt(i++));
+                enc2 = keyStr.indexOf(input.charAt(i++));
+                enc3 = keyStr.indexOf(input.charAt(i++));
+                enc4 = keyStr.indexOf(input.charAt(i++));
+
+                chr1 = (enc1 << 2) | (enc2 >> 4);
+                chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                chr3 = ((enc3 & 3) << 6) | enc4;
+
+                output = output + String.fromCharCode(chr1);
+
+                if (enc3 != 64) {
+                    output = output + String.fromCharCode(chr2);
+                }
+                if (enc4 != 64) {
+                    output = output + String.fromCharCode(chr3);
+                }
+
+            }
+
+            return output;
+        };
+    }
+
+
+    function getImageSize(imageArray) {
+        var segments = slice2Segments(imageArray);
+        var seg,
+            width,
+            height,
+            SOF = [192, 193, 194, 195, 197, 198, 199, 201, 202, 203, 205, 206, 207];
+
+        for (var x = 0; x < segments.length; x++) {
+            seg = segments[x];
+            if (SOF.indexOf(seg[1]) >= 0) {
+                height = seg[5] * 256 + seg[6];
+                width = seg[7] * 256 + seg[8];
+                break;
+            }
+        }
+        return [width, height];
+    }
+
+
+    function pack(mark, array) {
+        if (!(array instanceof Array)) {
+            throw new Error("'pack' error. Got invalid type argument.");
+        }
+        if ((mark.length - 1) != array.length) {
+            throw new Error("'pack' error. " + (mark.length - 1) + " marks, " + array.length + " elements.");
+        }
+
+        var littleEndian;
+        if (mark[0] == "<") {
+            littleEndian = true;
+        } else if (mark[0] == ">") {
+            littleEndian = false;
+        } else {
+            throw new Error("");
+        }
+        var packed = "";
+        var p = 1;
+        var val = null;
+        var c = null;
+        var valStr = null;
+
+        while (c = mark[p]) {
+            if (c.toLowerCase() == "b") {
+                val = array[p - 1];
+                if ((c == "b") && (val < 0)) {
+                    val += 0x100;
+                }
+                if ((val > 0xff) || (val < 0)) {
+                    throw new Error("'pack' error.");
+                } else {
+                    valStr = String.fromCharCode(val);
+                }
+            } else if (c == "H") {
+                val = array[p - 1];
+                if ((val > 0xffff) || (val < 0)) {
+                    throw new Error("'pack' error.");
+                } else {
+                    valStr = String.fromCharCode(Math.floor((val % 0x10000) / 0x100)) +
+                        String.fromCharCode(val % 0x100);
+                    if (littleEndian) {
+                        valStr = valStr.split("").reverse().join("");
+                    }
+                }
+            } else if (c.toLowerCase() == "l") {
+                val = array[p - 1];
+                if ((c == "l") && (val < 0)) {
+                    val += 0x100000000;
+                }
+                if ((val > 0xffffffff) || (val < 0)) {
+                    throw new Error("'pack' error.");
+                } else {
+                    valStr = String.fromCharCode(Math.floor(val / 0x1000000)) +
+                        String.fromCharCode(Math.floor((val % 0x1000000) / 0x10000)) +
+                        String.fromCharCode(Math.floor((val % 0x10000) / 0x100)) +
+                        String.fromCharCode(val % 0x100);
+                    if (littleEndian) {
+                        valStr = valStr.split("").reverse().join("");
+                    }
+                }
+            } else {
+                throw new Error("'pack' error.");
+            }
+
+            packed += valStr;
+            p += 1;
+        }
+
+        return packed;
+    }
+
+    function unpack(mark, str) {
+        if (typeof (str) != "string") {
+            throw new Error("'unpack' error. Got invalid type argument.");
+        }
+        var l = 0;
+        for (var markPointer = 1; markPointer < mark.length; markPointer++) {
+            if (mark[markPointer].toLowerCase() == "b") {
+                l += 1;
+            } else if (mark[markPointer].toLowerCase() == "h") {
+                l += 2;
+            } else if (mark[markPointer].toLowerCase() == "l") {
+                l += 4;
+            } else {
+                throw new Error("'unpack' error. Got invalid mark.");
+            }
+        }
+
+        if (l != str.length) {
+            throw new Error("'unpack' error. Mismatch between symbol and string length. " + l + ":" + str.length);
+        }
+
+        var littleEndian;
+        if (mark[0] == "<") {
+            littleEndian = true;
+        } else if (mark[0] == ">") {
+            littleEndian = false;
+        } else {
+            throw new Error("'unpack' error.");
+        }
+        var unpacked = [];
+        var strPointer = 0;
+        var p = 1;
+        var val = null;
+        var c = null;
+        var length = null;
+        var sliced = "";
+
+        while (c = mark[p]) {
+            if (c.toLowerCase() == "b") {
+                length = 1;
+                sliced = str.slice(strPointer, strPointer + length);
+                val = sliced.charCodeAt(0);
+                if ((c == "b") && (val >= 0x80)) {
+                    val -= 0x100;
+                }
+            } else if (c == "H") {
+                length = 2;
+                sliced = str.slice(strPointer, strPointer + length);
+                if (littleEndian) {
+                    sliced = sliced.split("").reverse().join("");
+                }
+                val = sliced.charCodeAt(0) * 0x100 +
+                    sliced.charCodeAt(1);
+            } else if (c.toLowerCase() == "l") {
+                length = 4;
+                sliced = str.slice(strPointer, strPointer + length);
+                if (littleEndian) {
+                    sliced = sliced.split("").reverse().join("");
+                }
+                val = sliced.charCodeAt(0) * 0x1000000 +
+                    sliced.charCodeAt(1) * 0x10000 +
+                    sliced.charCodeAt(2) * 0x100 +
+                    sliced.charCodeAt(3);
+                if ((c == "l") && (val >= 0x80000000)) {
+                    val -= 0x100000000;
+                }
+            } else {
+                throw new Error("'unpack' error. " + c);
+            }
+
+            unpacked.push(val);
+            strPointer += length;
+            p += 1;
+        }
+
+        return unpacked;
+    }
+
+    function nStr(ch, num) {
+        var str = "";
+        for (var i = 0; i < num; i++) {
+            str += ch;
+        }
+        return str;
+    }
+
+    function splitIntoSegments(data) {
+        if (data.slice(0, 2) != "\xff\xd8") {
+            throw new Error("Given data isn't JPEG.");
+        }
+
+        var head = 2;
+        var segments = ["\xff\xd8"];
+        while (true) {
+            if (data.slice(head, head + 2) == "\xff\xda") {
+                segments.push(data.slice(head));
+                break;
+            } else {
+                var length = unpack(">H", data.slice(head + 2, head + 4))[0];
+                var endPoint = head + length + 2;
+                segments.push(data.slice(head, endPoint));
+                head = endPoint;
+            }
+
+            if (head >= data.length) {
+                throw new Error("Wrong JPEG data.");
+            }
+        }
+        return segments;
+    }
+
+
+    function getExifSeg(segments) {
+        var seg;
+        for (var i = 0; i < segments.length; i++) {
+            seg = segments[i];
+            if (seg.slice(0, 2) == "\xff\xe1" &&
+                   seg.slice(4, 10) == "Exif\x00\x00") {
+                return seg;
+            }
+        }
+        return null;
+    }
+
+
+    function mergeSegments(segments, exif) {
+        var hasExifSegment = false;
+        var additionalAPP1ExifSegments = [];
+
+        segments.forEach(function(segment, i) {
+            // Replace first occurence of APP1:Exif segment
+            if (segment.slice(0, 2) == "\xff\xe1" &&
+                segment.slice(4, 10) == "Exif\x00\x00"
+            ) {
+                if (!hasExifSegment) {
+                    segments[i] = exif;
+                    hasExifSegment = true;
+                } else {
+                    additionalAPP1ExifSegments.unshift(i);
+                }
+            }
+        });
+
+        // Remove additional occurences of APP1:Exif segment
+        additionalAPP1ExifSegments.forEach(function(segmentIndex) {
+            segments.splice(segmentIndex, 1);
+        });
+
+        if (!hasExifSegment && exif) {
+            segments = [segments[0], exif].concat(segments.slice(1));
+        }
+
+        return segments.join("");
+    }
+
+
+    function toHex(str) {
+        var hexStr = "";
+        for (var i = 0; i < str.length; i++) {
+            var h = str.charCodeAt(i);
+            var hex = ((h < 10) ? "0" : "") + h.toString(16);
+            hexStr += hex + " ";
+        }
+        return hexStr;
+    }
+
+
+    var TYPES = {
+        "Byte": 1,
+        "Ascii": 2,
+        "Short": 3,
+        "Long": 4,
+        "Rational": 5,
+        "Undefined": 7,
+        "SLong": 9,
+        "SRational": 10
+    };
+
+
+    var TAGS = {
+        'Image': {
+            11: {
+                'name': 'ProcessingSoftware',
+                'type': 'Ascii'
+            },
+            254: {
+                'name': 'NewSubfileType',
+                'type': 'Long'
+            },
+            255: {
+                'name': 'SubfileType',
+                'type': 'Short'
+            },
+            256: {
+                'name': 'ImageWidth',
+                'type': 'Long'
+            },
+            257: {
+                'name': 'ImageLength',
+                'type': 'Long'
+            },
+            258: {
+                'name': 'BitsPerSample',
+                'type': 'Short'
+            },
+            259: {
+                'name': 'Compression',
+                'type': 'Short'
+            },
+            262: {
+                'name': 'PhotometricInterpretation',
+                'type': 'Short'
+            },
+            263: {
+                'name': 'Threshholding',
+                'type': 'Short'
+            },
+            264: {
+                'name': 'CellWidth',
+                'type': 'Short'
+            },
+            265: {
+                'name': 'CellLength',
+                'type': 'Short'
+            },
+            266: {
+                'name': 'FillOrder',
+                'type': 'Short'
+            },
+            269: {
+                'name': 'DocumentName',
+                'type': 'Ascii'
+            },
+            270: {
+                'name': 'ImageDescription',
+                'type': 'Ascii'
+            },
+            271: {
+                'name': 'Make',
+                'type': 'Ascii'
+            },
+            272: {
+                'name': 'Model',
+                'type': 'Ascii'
+            },
+            273: {
+                'name': 'StripOffsets',
+                'type': 'Long'
+            },
+            274: {
+                'name': 'Orientation',
+                'type': 'Short'
+            },
+            277: {
+                'name': 'SamplesPerPixel',
+                'type': 'Short'
+            },
+            278: {
+                'name': 'RowsPerStrip',
+                'type': 'Long'
+            },
+            279: {
+                'name': 'StripByteCounts',
+                'type': 'Long'
+            },
+            282: {
+                'name': 'XResolution',
+                'type': 'Rational'
+            },
+            283: {
+                'name': 'YResolution',
+                'type': 'Rational'
+            },
+            284: {
+                'name': 'PlanarConfiguration',
+                'type': 'Short'
+            },
+            290: {
+                'name': 'GrayResponseUnit',
+                'type': 'Short'
+            },
+            291: {
+                'name': 'GrayResponseCurve',
+                'type': 'Short'
+            },
+            292: {
+                'name': 'T4Options',
+                'type': 'Long'
+            },
+            293: {
+                'name': 'T6Options',
+                'type': 'Long'
+            },
+            296: {
+                'name': 'ResolutionUnit',
+                'type': 'Short'
+            },
+            301: {
+                'name': 'TransferFunction',
+                'type': 'Short'
+            },
+            305: {
+                'name': 'Software',
+                'type': 'Ascii'
+            },
+            306: {
+                'name': 'DateTime',
+                'type': 'Ascii'
+            },
+            315: {
+                'name': 'Artist',
+                'type': 'Ascii'
+            },
+            316: {
+                'name': 'HostComputer',
+                'type': 'Ascii'
+            },
+            317: {
+                'name': 'Predictor',
+                'type': 'Short'
+            },
+            318: {
+                'name': 'WhitePoint',
+                'type': 'Rational'
+            },
+            319: {
+                'name': 'PrimaryChromaticities',
+                'type': 'Rational'
+            },
+            320: {
+                'name': 'ColorMap',
+                'type': 'Short'
+            },
+            321: {
+                'name': 'HalftoneHints',
+                'type': 'Short'
+            },
+            322: {
+                'name': 'TileWidth',
+                'type': 'Short'
+            },
+            323: {
+                'name': 'TileLength',
+                'type': 'Short'
+            },
+            324: {
+                'name': 'TileOffsets',
+                'type': 'Short'
+            },
+            325: {
+                'name': 'TileByteCounts',
+                'type': 'Short'
+            },
+            330: {
+                'name': 'SubIFDs',
+                'type': 'Long'
+            },
+            332: {
+                'name': 'InkSet',
+                'type': 'Short'
+            },
+            333: {
+                'name': 'InkNames',
+                'type': 'Ascii'
+            },
+            334: {
+                'name': 'NumberOfInks',
+                'type': 'Short'
+            },
+            336: {
+                'name': 'DotRange',
+                'type': 'Byte'
+            },
+            337: {
+                'name': 'TargetPrinter',
+                'type': 'Ascii'
+            },
+            338: {
+                'name': 'ExtraSamples',
+                'type': 'Short'
+            },
+            339: {
+                'name': 'SampleFormat',
+                'type': 'Short'
+            },
+            340: {
+                'name': 'SMinSampleValue',
+                'type': 'Short'
+            },
+            341: {
+                'name': 'SMaxSampleValue',
+                'type': 'Short'
+            },
+            342: {
+                'name': 'TransferRange',
+                'type': 'Short'
+            },
+            343: {
+                'name': 'ClipPath',
+                'type': 'Byte'
+            },
+            344: {
+                'name': 'XClipPathUnits',
+                'type': 'Long'
+            },
+            345: {
+                'name': 'YClipPathUnits',
+                'type': 'Long'
+            },
+            346: {
+                'name': 'Indexed',
+                'type': 'Short'
+            },
+            347: {
+                'name': 'JPEGTables',
+                'type': 'Undefined'
+            },
+            351: {
+                'name': 'OPIProxy',
+                'type': 'Short'
+            },
+            512: {
+                'name': 'JPEGProc',
+                'type': 'Long'
+            },
+            513: {
+                'name': 'JPEGInterchangeFormat',
+                'type': 'Long'
+            },
+            514: {
+                'name': 'JPEGInterchangeFormatLength',
+                'type': 'Long'
+            },
+            515: {
+                'name': 'JPEGRestartInterval',
+                'type': 'Short'
+            },
+            517: {
+                'name': 'JPEGLosslessPredictors',
+                'type': 'Short'
+            },
+            518: {
+                'name': 'JPEGPointTransforms',
+                'type': 'Short'
+            },
+            519: {
+                'name': 'JPEGQTables',
+                'type': 'Long'
+            },
+            520: {
+                'name': 'JPEGDCTables',
+                'type': 'Long'
+            },
+            521: {
+                'name': 'JPEGACTables',
+                'type': 'Long'
+            },
+            529: {
+                'name': 'YCbCrCoefficients',
+                'type': 'Rational'
+            },
+            530: {
+                'name': 'YCbCrSubSampling',
+                'type': 'Short'
+            },
+            531: {
+                'name': 'YCbCrPositioning',
+                'type': 'Short'
+            },
+            532: {
+                'name': 'ReferenceBlackWhite',
+                'type': 'Rational'
+            },
+            700: {
+                'name': 'XMLPacket',
+                'type': 'Byte'
+            },
+            18246: {
+                'name': 'Rating',
+                'type': 'Short'
+            },
+            18249: {
+                'name': 'RatingPercent',
+                'type': 'Short'
+            },
+            32781: {
+                'name': 'ImageID',
+                'type': 'Ascii'
+            },
+            33421: {
+                'name': 'CFARepeatPatternDim',
+                'type': 'Short'
+            },
+            33422: {
+                'name': 'CFAPattern',
+                'type': 'Byte'
+            },
+            33423: {
+                'name': 'BatteryLevel',
+                'type': 'Rational'
+            },
+            33432: {
+                'name': 'Copyright',
+                'type': 'Ascii'
+            },
+            33434: {
+                'name': 'ExposureTime',
+                'type': 'Rational'
+            },
+            34377: {
+                'name': 'ImageResources',
+                'type': 'Byte'
+            },
+            34665: {
+                'name': 'ExifTag',
+                'type': 'Long'
+            },
+            34675: {
+                'name': 'InterColorProfile',
+                'type': 'Undefined'
+            },
+            34853: {
+                'name': 'GPSTag',
+                'type': 'Long'
+            },
+            34857: {
+                'name': 'Interlace',
+                'type': 'Short'
+            },
+            34858: {
+                'name': 'TimeZoneOffset',
+                'type': 'Long'
+            },
+            34859: {
+                'name': 'SelfTimerMode',
+                'type': 'Short'
+            },
+            37387: {
+                'name': 'FlashEnergy',
+                'type': 'Rational'
+            },
+            37388: {
+                'name': 'SpatialFrequencyResponse',
+                'type': 'Undefined'
+            },
+            37389: {
+                'name': 'Noise',
+                'type': 'Undefined'
+            },
+            37390: {
+                'name': 'FocalPlaneXResolution',
+                'type': 'Rational'
+            },
+            37391: {
+                'name': 'FocalPlaneYResolution',
+                'type': 'Rational'
+            },
+            37392: {
+                'name': 'FocalPlaneResolutionUnit',
+                'type': 'Short'
+            },
+            37393: {
+                'name': 'ImageNumber',
+                'type': 'Long'
+            },
+            37394: {
+                'name': 'SecurityClassification',
+                'type': 'Ascii'
+            },
+            37395: {
+                'name': 'ImageHistory',
+                'type': 'Ascii'
+            },
+            37397: {
+                'name': 'ExposureIndex',
+                'type': 'Rational'
+            },
+            37398: {
+                'name': 'TIFFEPStandardID',
+                'type': 'Byte'
+            },
+            37399: {
+                'name': 'SensingMethod',
+                'type': 'Short'
+            },
+            40091: {
+                'name': 'XPTitle',
+                'type': 'Byte'
+            },
+            40092: {
+                'name': 'XPComment',
+                'type': 'Byte'
+            },
+            40093: {
+                'name': 'XPAuthor',
+                'type': 'Byte'
+            },
+            40094: {
+                'name': 'XPKeywords',
+                'type': 'Byte'
+            },
+            40095: {
+                'name': 'XPSubject',
+                'type': 'Byte'
+            },
+            50341: {
+                'name': 'PrintImageMatching',
+                'type': 'Undefined'
+            },
+            50706: {
+                'name': 'DNGVersion',
+                'type': 'Byte'
+            },
+            50707: {
+                'name': 'DNGBackwardVersion',
+                'type': 'Byte'
+            },
+            50708: {
+                'name': 'UniqueCameraModel',
+                'type': 'Ascii'
+            },
+            50709: {
+                'name': 'LocalizedCameraModel',
+                'type': 'Byte'
+            },
+            50710: {
+                'name': 'CFAPlaneColor',
+                'type': 'Byte'
+            },
+            50711: {
+                'name': 'CFALayout',
+                'type': 'Short'
+            },
+            50712: {
+                'name': 'LinearizationTable',
+                'type': 'Short'
+            },
+            50713: {
+                'name': 'BlackLevelRepeatDim',
+                'type': 'Short'
+            },
+            50714: {
+                'name': 'BlackLevel',
+                'type': 'Rational'
+            },
+            50715: {
+                'name': 'BlackLevelDeltaH',
+                'type': 'SRational'
+            },
+            50716: {
+                'name': 'BlackLevelDeltaV',
+                'type': 'SRational'
+            },
+            50717: {
+                'name': 'WhiteLevel',
+                'type': 'Short'
+            },
+            50718: {
+                'name': 'DefaultScale',
+                'type': 'Rational'
+            },
+            50719: {
+                'name': 'DefaultCropOrigin',
+                'type': 'Short'
+            },
+            50720: {
+                'name': 'DefaultCropSize',
+                'type': 'Short'
+            },
+            50721: {
+                'name': 'ColorMatrix1',
+                'type': 'SRational'
+            },
+            50722: {
+                'name': 'ColorMatrix2',
+                'type': 'SRational'
+            },
+            50723: {
+                'name': 'CameraCalibration1',
+                'type': 'SRational'
+            },
+            50724: {
+                'name': 'CameraCalibration2',
+                'type': 'SRational'
+            },
+            50725: {
+                'name': 'ReductionMatrix1',
+                'type': 'SRational'
+            },
+            50726: {
+                'name': 'ReductionMatrix2',
+                'type': 'SRational'
+            },
+            50727: {
+                'name': 'AnalogBalance',
+                'type': 'Rational'
+            },
+            50728: {
+                'name': 'AsShotNeutral',
+                'type': 'Short'
+            },
+            50729: {
+                'name': 'AsShotWhiteXY',
+                'type': 'Rational'
+            },
+            50730: {
+                'name': 'BaselineExposure',
+                'type': 'SRational'
+            },
+            50731: {
+                'name': 'BaselineNoise',
+                'type': 'Rational'
+            },
+            50732: {
+                'name': 'BaselineSharpness',
+                'type': 'Rational'
+            },
+            50733: {
+                'name': 'BayerGreenSplit',
+                'type': 'Long'
+            },
+            50734: {
+                'name': 'LinearResponseLimit',
+                'type': 'Rational'
+            },
+            50735: {
+                'name': 'CameraSerialNumber',
+                'type': 'Ascii'
+            },
+            50736: {
+                'name': 'LensInfo',
+                'type': 'Rational'
+            },
+            50737: {
+                'name': 'ChromaBlurRadius',
+                'type': 'Rational'
+            },
+            50738: {
+                'name': 'AntiAliasStrength',
+                'type': 'Rational'
+            },
+            50739: {
+                'name': 'ShadowScale',
+                'type': 'SRational'
+            },
+            50740: {
+                'name': 'DNGPrivateData',
+                'type': 'Byte'
+            },
+            50741: {
+                'name': 'MakerNoteSafety',
+                'type': 'Short'
+            },
+            50778: {
+                'name': 'CalibrationIlluminant1',
+                'type': 'Short'
+            },
+            50779: {
+                'name': 'CalibrationIlluminant2',
+                'type': 'Short'
+            },
+            50780: {
+                'name': 'BestQualityScale',
+                'type': 'Rational'
+            },
+            50781: {
+                'name': 'RawDataUniqueID',
+                'type': 'Byte'
+            },
+            50827: {
+                'name': 'OriginalRawFileName',
+                'type': 'Byte'
+            },
+            50828: {
+                'name': 'OriginalRawFileData',
+                'type': 'Undefined'
+            },
+            50829: {
+                'name': 'ActiveArea',
+                'type': 'Short'
+            },
+            50830: {
+                'name': 'MaskedAreas',
+                'type': 'Short'
+            },
+            50831: {
+                'name': 'AsShotICCProfile',
+                'type': 'Undefined'
+            },
+            50832: {
+                'name': 'AsShotPreProfileMatrix',
+                'type': 'SRational'
+            },
+            50833: {
+                'name': 'CurrentICCProfile',
+                'type': 'Undefined'
+            },
+            50834: {
+                'name': 'CurrentPreProfileMatrix',
+                'type': 'SRational'
+            },
+            50879: {
+                'name': 'ColorimetricReference',
+                'type': 'Short'
+            },
+            50931: {
+                'name': 'CameraCalibrationSignature',
+                'type': 'Byte'
+            },
+            50932: {
+                'name': 'ProfileCalibrationSignature',
+                'type': 'Byte'
+            },
+            50934: {
+                'name': 'AsShotProfileName',
+                'type': 'Byte'
+            },
+            50935: {
+                'name': 'NoiseReductionApplied',
+                'type': 'Rational'
+            },
+            50936: {
+                'name': 'ProfileName',
+                'type': 'Byte'
+            },
+            50937: {
+                'name': 'ProfileHueSatMapDims',
+                'type': 'Long'
+            },
+            50938: {
+                'name': 'ProfileHueSatMapData1',
+                'type': 'Float'
+            },
+            50939: {
+                'name': 'ProfileHueSatMapData2',
+                'type': 'Float'
+            },
+            50940: {
+                'name': 'ProfileToneCurve',
+                'type': 'Float'
+            },
+            50941: {
+                'name': 'ProfileEmbedPolicy',
+                'type': 'Long'
+            },
+            50942: {
+                'name': 'ProfileCopyright',
+                'type': 'Byte'
+            },
+            50964: {
+                'name': 'ForwardMatrix1',
+                'type': 'SRational'
+            },
+            50965: {
+                'name': 'ForwardMatrix2',
+                'type': 'SRational'
+            },
+            50966: {
+                'name': 'PreviewApplicationName',
+                'type': 'Byte'
+            },
+            50967: {
+                'name': 'PreviewApplicationVersion',
+                'type': 'Byte'
+            },
+            50968: {
+                'name': 'PreviewSettingsName',
+                'type': 'Byte'
+            },
+            50969: {
+                'name': 'PreviewSettingsDigest',
+                'type': 'Byte'
+            },
+            50970: {
+                'name': 'PreviewColorSpace',
+                'type': 'Long'
+            },
+            50971: {
+                'name': 'PreviewDateTime',
+                'type': 'Ascii'
+            },
+            50972: {
+                'name': 'RawImageDigest',
+                'type': 'Undefined'
+            },
+            50973: {
+                'name': 'OriginalRawFileDigest',
+                'type': 'Undefined'
+            },
+            50974: {
+                'name': 'SubTileBlockSize',
+                'type': 'Long'
+            },
+            50975: {
+                'name': 'RowInterleaveFactor',
+                'type': 'Long'
+            },
+            50981: {
+                'name': 'ProfileLookTableDims',
+                'type': 'Long'
+            },
+            50982: {
+                'name': 'ProfileLookTableData',
+                'type': 'Float'
+            },
+            51008: {
+                'name': 'OpcodeList1',
+                'type': 'Undefined'
+            },
+            51009: {
+                'name': 'OpcodeList2',
+                'type': 'Undefined'
+            },
+            51022: {
+                'name': 'OpcodeList3',
+                'type': 'Undefined'
+            }
+        },
+        'Exif': {
+            33434: {
+                'name': 'ExposureTime',
+                'type': 'Rational'
+            },
+            33437: {
+                'name': 'FNumber',
+                'type': 'Rational'
+            },
+            34850: {
+                'name': 'ExposureProgram',
+                'type': 'Short'
+            },
+            34852: {
+                'name': 'SpectralSensitivity',
+                'type': 'Ascii'
+            },
+            34855: {
+                'name': 'ISOSpeedRatings',
+                'type': 'Short'
+            },
+            34856: {
+                'name': 'OECF',
+                'type': 'Undefined'
+            },
+            34864: {
+                'name': 'SensitivityType',
+                'type': 'Short'
+            },
+            34865: {
+                'name': 'StandardOutputSensitivity',
+                'type': 'Long'
+            },
+            34866: {
+                'name': 'RecommendedExposureIndex',
+                'type': 'Long'
+            },
+            34867: {
+                'name': 'ISOSpeed',
+                'type': 'Long'
+            },
+            34868: {
+                'name': 'ISOSpeedLatitudeyyy',
+                'type': 'Long'
+            },
+            34869: {
+                'name': 'ISOSpeedLatitudezzz',
+                'type': 'Long'
+            },
+            36864: {
+                'name': 'ExifVersion',
+                'type': 'Undefined'
+            },
+            36867: {
+                'name': 'DateTimeOriginal',
+                'type': 'Ascii'
+            },
+            36868: {
+                'name': 'DateTimeDigitized',
+                'type': 'Ascii'
+            },
+            37121: {
+                'name': 'ComponentsConfiguration',
+                'type': 'Undefined'
+            },
+            37122: {
+                'name': 'CompressedBitsPerPixel',
+                'type': 'Rational'
+            },
+            37377: {
+                'name': 'ShutterSpeedValue',
+                'type': 'SRational'
+            },
+            37378: {
+                'name': 'ApertureValue',
+                'type': 'Rational'
+            },
+            37379: {
+                'name': 'BrightnessValue',
+                'type': 'SRational'
+            },
+            37380: {
+                'name': 'ExposureBiasValue',
+                'type': 'SRational'
+            },
+            37381: {
+                'name': 'MaxApertureValue',
+                'type': 'Rational'
+            },
+            37382: {
+                'name': 'SubjectDistance',
+                'type': 'Rational'
+            },
+            37383: {
+                'name': 'MeteringMode',
+                'type': 'Short'
+            },
+            37384: {
+                'name': 'LightSource',
+                'type': 'Short'
+            },
+            37385: {
+                'name': 'Flash',
+                'type': 'Short'
+            },
+            37386: {
+                'name': 'FocalLength',
+                'type': 'Rational'
+            },
+            37396: {
+                'name': 'SubjectArea',
+                'type': 'Short'
+            },
+            37500: {
+                'name': 'MakerNote',
+                'type': 'Undefined'
+            },
+            37510: {
+                'name': 'UserComment',
+                'type': 'Ascii'
+            },
+            37520: {
+                'name': 'SubSecTime',
+                'type': 'Ascii'
+            },
+            37521: {
+                'name': 'SubSecTimeOriginal',
+                'type': 'Ascii'
+            },
+            37522: {
+                'name': 'SubSecTimeDigitized',
+                'type': 'Ascii'
+            },
+            40960: {
+                'name': 'FlashpixVersion',
+                'type': 'Undefined'
+            },
+            40961: {
+                'name': 'ColorSpace',
+                'type': 'Short'
+            },
+            40962: {
+                'name': 'PixelXDimension',
+                'type': 'Long'
+            },
+            40963: {
+                'name': 'PixelYDimension',
+                'type': 'Long'
+            },
+            40964: {
+                'name': 'RelatedSoundFile',
+                'type': 'Ascii'
+            },
+            40965: {
+                'name': 'InteroperabilityTag',
+                'type': 'Long'
+            },
+            41483: {
+                'name': 'FlashEnergy',
+                'type': 'Rational'
+            },
+            41484: {
+                'name': 'SpatialFrequencyResponse',
+                'type': 'Undefined'
+            },
+            41486: {
+                'name': 'FocalPlaneXResolution',
+                'type': 'Rational'
+            },
+            41487: {
+                'name': 'FocalPlaneYResolution',
+                'type': 'Rational'
+            },
+            41488: {
+                'name': 'FocalPlaneResolutionUnit',
+                'type': 'Short'
+            },
+            41492: {
+                'name': 'SubjectLocation',
+                'type': 'Short'
+            },
+            41493: {
+                'name': 'ExposureIndex',
+                'type': 'Rational'
+            },
+            41495: {
+                'name': 'SensingMethod',
+                'type': 'Short'
+            },
+            41728: {
+                'name': 'FileSource',
+                'type': 'Undefined'
+            },
+            41729: {
+                'name': 'SceneType',
+                'type': 'Undefined'
+            },
+            41730: {
+                'name': 'CFAPattern',
+                'type': 'Undefined'
+            },
+            41985: {
+                'name': 'CustomRendered',
+                'type': 'Short'
+            },
+            41986: {
+                'name': 'ExposureMode',
+                'type': 'Short'
+            },
+            41987: {
+                'name': 'WhiteBalance',
+                'type': 'Short'
+            },
+            41988: {
+                'name': 'DigitalZoomRatio',
+                'type': 'Rational'
+            },
+            41989: {
+                'name': 'FocalLengthIn35mmFilm',
+                'type': 'Short'
+            },
+            41990: {
+                'name': 'SceneCaptureType',
+                'type': 'Short'
+            },
+            41991: {
+                'name': 'GainControl',
+                'type': 'Short'
+            },
+            41992: {
+                'name': 'Contrast',
+                'type': 'Short'
+            },
+            41993: {
+                'name': 'Saturation',
+                'type': 'Short'
+            },
+            41994: {
+                'name': 'Sharpness',
+                'type': 'Short'
+            },
+            41995: {
+                'name': 'DeviceSettingDescription',
+                'type': 'Undefined'
+            },
+            41996: {
+                'name': 'SubjectDistanceRange',
+                'type': 'Short'
+            },
+            42016: {
+                'name': 'ImageUniqueID',
+                'type': 'Ascii'
+            },
+            42032: {
+                'name': 'CameraOwnerName',
+                'type': 'Ascii'
+            },
+            42033: {
+                'name': 'BodySerialNumber',
+                'type': 'Ascii'
+            },
+            42034: {
+                'name': 'LensSpecification',
+                'type': 'Rational'
+            },
+            42035: {
+                'name': 'LensMake',
+                'type': 'Ascii'
+            },
+            42036: {
+                'name': 'LensModel',
+                'type': 'Ascii'
+            },
+            42037: {
+                'name': 'LensSerialNumber',
+                'type': 'Ascii'
+            },
+            42240: {
+                'name': 'Gamma',
+                'type': 'Rational'
+            }
+        },
+        'GPS': {
+            0: {
+                'name': 'GPSVersionID',
+                'type': 'Byte'
+            },
+            1: {
+                'name': 'GPSLatitudeRef',
+                'type': 'Ascii'
+            },
+            2: {
+                'name': 'GPSLatitude',
+                'type': 'Rational'
+            },
+            3: {
+                'name': 'GPSLongitudeRef',
+                'type': 'Ascii'
+            },
+            4: {
+                'name': 'GPSLongitude',
+                'type': 'Rational'
+            },
+            5: {
+                'name': 'GPSAltitudeRef',
+                'type': 'Byte'
+            },
+            6: {
+                'name': 'GPSAltitude',
+                'type': 'Rational'
+            },
+            7: {
+                'name': 'GPSTimeStamp',
+                'type': 'Rational'
+            },
+            8: {
+                'name': 'GPSSatellites',
+                'type': 'Ascii'
+            },
+            9: {
+                'name': 'GPSStatus',
+                'type': 'Ascii'
+            },
+            10: {
+                'name': 'GPSMeasureMode',
+                'type': 'Ascii'
+            },
+            11: {
+                'name': 'GPSDOP',
+                'type': 'Rational'
+            },
+            12: {
+                'name': 'GPSSpeedRef',
+                'type': 'Ascii'
+            },
+            13: {
+                'name': 'GPSSpeed',
+                'type': 'Rational'
+            },
+            14: {
+                'name': 'GPSTrackRef',
+                'type': 'Ascii'
+            },
+            15: {
+                'name': 'GPSTrack',
+                'type': 'Rational'
+            },
+            16: {
+                'name': 'GPSImgDirectionRef',
+                'type': 'Ascii'
+            },
+            17: {
+                'name': 'GPSImgDirection',
+                'type': 'Rational'
+            },
+            18: {
+                'name': 'GPSMapDatum',
+                'type': 'Ascii'
+            },
+            19: {
+                'name': 'GPSDestLatitudeRef',
+                'type': 'Ascii'
+            },
+            20: {
+                'name': 'GPSDestLatitude',
+                'type': 'Rational'
+            },
+            21: {
+                'name': 'GPSDestLongitudeRef',
+                'type': 'Ascii'
+            },
+            22: {
+                'name': 'GPSDestLongitude',
+                'type': 'Rational'
+            },
+            23: {
+                'name': 'GPSDestBearingRef',
+                'type': 'Ascii'
+            },
+            24: {
+                'name': 'GPSDestBearing',
+                'type': 'Rational'
+            },
+            25: {
+                'name': 'GPSDestDistanceRef',
+                'type': 'Ascii'
+            },
+            26: {
+                'name': 'GPSDestDistance',
+                'type': 'Rational'
+            },
+            27: {
+                'name': 'GPSProcessingMethod',
+                'type': 'Undefined'
+            },
+            28: {
+                'name': 'GPSAreaInformation',
+                'type': 'Undefined'
+            },
+            29: {
+                'name': 'GPSDateStamp',
+                'type': 'Ascii'
+            },
+            30: {
+                'name': 'GPSDifferential',
+                'type': 'Short'
+            },
+            31: {
+                'name': 'GPSHPositioningError',
+                'type': 'Rational'
+            }
+        },
+        'Interop': {
+            1: {
+                'name': 'InteroperabilityIndex',
+                'type': 'Ascii'
+            }
+        },
+    };
+    TAGS["0th"] = TAGS["Image"];
+    TAGS["1st"] = TAGS["Image"];
+    that.TAGS = TAGS;
+
+    
+    that.ImageIFD = {
+        ProcessingSoftware:11,
+        NewSubfileType:254,
+        SubfileType:255,
+        ImageWidth:256,
+        ImageLength:257,
+        BitsPerSample:258,
+        Compression:259,
+        PhotometricInterpretation:262,
+        Threshholding:263,
+        CellWidth:264,
+        CellLength:265,
+        FillOrder:266,
+        DocumentName:269,
+        ImageDescription:270,
+        Make:271,
+        Model:272,
+        StripOffsets:273,
+        Orientation:274,
+        SamplesPerPixel:277,
+        RowsPerStrip:278,
+        StripByteCounts:279,
+        XResolution:282,
+        YResolution:283,
+        PlanarConfiguration:284,
+        GrayResponseUnit:290,
+        GrayResponseCurve:291,
+        T4Options:292,
+        T6Options:293,
+        ResolutionUnit:296,
+        TransferFunction:301,
+        Software:305,
+        DateTime:306,
+        Artist:315,
+        HostComputer:316,
+        Predictor:317,
+        WhitePoint:318,
+        PrimaryChromaticities:319,
+        ColorMap:320,
+        HalftoneHints:321,
+        TileWidth:322,
+        TileLength:323,
+        TileOffsets:324,
+        TileByteCounts:325,
+        SubIFDs:330,
+        InkSet:332,
+        InkNames:333,
+        NumberOfInks:334,
+        DotRange:336,
+        TargetPrinter:337,
+        ExtraSamples:338,
+        SampleFormat:339,
+        SMinSampleValue:340,
+        SMaxSampleValue:341,
+        TransferRange:342,
+        ClipPath:343,
+        XClipPathUnits:344,
+        YClipPathUnits:345,
+        Indexed:346,
+        JPEGTables:347,
+        OPIProxy:351,
+        JPEGProc:512,
+        JPEGInterchangeFormat:513,
+        JPEGInterchangeFormatLength:514,
+        JPEGRestartInterval:515,
+        JPEGLosslessPredictors:517,
+        JPEGPointTransforms:518,
+        JPEGQTables:519,
+        JPEGDCTables:520,
+        JPEGACTables:521,
+        YCbCrCoefficients:529,
+        YCbCrSubSampling:530,
+        YCbCrPositioning:531,
+        ReferenceBlackWhite:532,
+        XMLPacket:700,
+        Rating:18246,
+        RatingPercent:18249,
+        ImageID:32781,
+        CFARepeatPatternDim:33421,
+        CFAPattern:33422,
+        BatteryLevel:33423,
+        Copyright:33432,
+        ExposureTime:33434,
+        ImageResources:34377,
+        ExifTag:34665,
+        InterColorProfile:34675,
+        GPSTag:34853,
+        Interlace:34857,
+        TimeZoneOffset:34858,
+        SelfTimerMode:34859,
+        FlashEnergy:37387,
+        SpatialFrequencyResponse:37388,
+        Noise:37389,
+        FocalPlaneXResolution:37390,
+        FocalPlaneYResolution:37391,
+        FocalPlaneResolutionUnit:37392,
+        ImageNumber:37393,
+        SecurityClassification:37394,
+        ImageHistory:37395,
+        ExposureIndex:37397,
+        TIFFEPStandardID:37398,
+        SensingMethod:37399,
+        XPTitle:40091,
+        XPComment:40092,
+        XPAuthor:40093,
+        XPKeywords:40094,
+        XPSubject:40095,
+        PrintImageMatching:50341,
+        DNGVersion:50706,
+        DNGBackwardVersion:50707,
+        UniqueCameraModel:50708,
+        LocalizedCameraModel:50709,
+        CFAPlaneColor:50710,
+        CFALayout:50711,
+        LinearizationTable:50712,
+        BlackLevelRepeatDim:50713,
+        BlackLevel:50714,
+        BlackLevelDeltaH:50715,
+        BlackLevelDeltaV:50716,
+        WhiteLevel:50717,
+        DefaultScale:50718,
+        DefaultCropOrigin:50719,
+        DefaultCropSize:50720,
+        ColorMatrix1:50721,
+        ColorMatrix2:50722,
+        CameraCalibration1:50723,
+        CameraCalibration2:50724,
+        ReductionMatrix1:50725,
+        ReductionMatrix2:50726,
+        AnalogBalance:50727,
+        AsShotNeutral:50728,
+        AsShotWhiteXY:50729,
+        BaselineExposure:50730,
+        BaselineNoise:50731,
+        BaselineSharpness:50732,
+        BayerGreenSplit:50733,
+        LinearResponseLimit:50734,
+        CameraSerialNumber:50735,
+        LensInfo:50736,
+        ChromaBlurRadius:50737,
+        AntiAliasStrength:50738,
+        ShadowScale:50739,
+        DNGPrivateData:50740,
+        MakerNoteSafety:50741,
+        CalibrationIlluminant1:50778,
+        CalibrationIlluminant2:50779,
+        BestQualityScale:50780,
+        RawDataUniqueID:50781,
+        OriginalRawFileName:50827,
+        OriginalRawFileData:50828,
+        ActiveArea:50829,
+        MaskedAreas:50830,
+        AsShotICCProfile:50831,
+        AsShotPreProfileMatrix:50832,
+        CurrentICCProfile:50833,
+        CurrentPreProfileMatrix:50834,
+        ColorimetricReference:50879,
+        CameraCalibrationSignature:50931,
+        ProfileCalibrationSignature:50932,
+        AsShotProfileName:50934,
+        NoiseReductionApplied:50935,
+        ProfileName:50936,
+        ProfileHueSatMapDims:50937,
+        ProfileHueSatMapData1:50938,
+        ProfileHueSatMapData2:50939,
+        ProfileToneCurve:50940,
+        ProfileEmbedPolicy:50941,
+        ProfileCopyright:50942,
+        ForwardMatrix1:50964,
+        ForwardMatrix2:50965,
+        PreviewApplicationName:50966,
+        PreviewApplicationVersion:50967,
+        PreviewSettingsName:50968,
+        PreviewSettingsDigest:50969,
+        PreviewColorSpace:50970,
+        PreviewDateTime:50971,
+        RawImageDigest:50972,
+        OriginalRawFileDigest:50973,
+        SubTileBlockSize:50974,
+        RowInterleaveFactor:50975,
+        ProfileLookTableDims:50981,
+        ProfileLookTableData:50982,
+        OpcodeList1:51008,
+        OpcodeList2:51009,
+        OpcodeList3:51022,
+        NoiseProfile:51041,
+    };
+
+    
+    that.ExifIFD = {
+        ExposureTime:33434,
+        FNumber:33437,
+        ExposureProgram:34850,
+        SpectralSensitivity:34852,
+        ISOSpeedRatings:34855,
+        OECF:34856,
+        SensitivityType:34864,
+        StandardOutputSensitivity:34865,
+        RecommendedExposureIndex:34866,
+        ISOSpeed:34867,
+        ISOSpeedLatitudeyyy:34868,
+        ISOSpeedLatitudezzz:34869,
+        ExifVersion:36864,
+        DateTimeOriginal:36867,
+        DateTimeDigitized:36868,
+        ComponentsConfiguration:37121,
+        CompressedBitsPerPixel:37122,
+        ShutterSpeedValue:37377,
+        ApertureValue:37378,
+        BrightnessValue:37379,
+        ExposureBiasValue:37380,
+        MaxApertureValue:37381,
+        SubjectDistance:37382,
+        MeteringMode:37383,
+        LightSource:37384,
+        Flash:37385,
+        FocalLength:37386,
+        SubjectArea:37396,
+        MakerNote:37500,
+        UserComment:37510,
+        SubSecTime:37520,
+        SubSecTimeOriginal:37521,
+        SubSecTimeDigitized:37522,
+        FlashpixVersion:40960,
+        ColorSpace:40961,
+        PixelXDimension:40962,
+        PixelYDimension:40963,
+        RelatedSoundFile:40964,
+        InteroperabilityTag:40965,
+        FlashEnergy:41483,
+        SpatialFrequencyResponse:41484,
+        FocalPlaneXResolution:41486,
+        FocalPlaneYResolution:41487,
+        FocalPlaneResolutionUnit:41488,
+        SubjectLocation:41492,
+        ExposureIndex:41493,
+        SensingMethod:41495,
+        FileSource:41728,
+        SceneType:41729,
+        CFAPattern:41730,
+        CustomRendered:41985,
+        ExposureMode:41986,
+        WhiteBalance:41987,
+        DigitalZoomRatio:41988,
+        FocalLengthIn35mmFilm:41989,
+        SceneCaptureType:41990,
+        GainControl:41991,
+        Contrast:41992,
+        Saturation:41993,
+        Sharpness:41994,
+        DeviceSettingDescription:41995,
+        SubjectDistanceRange:41996,
+        ImageUniqueID:42016,
+        CameraOwnerName:42032,
+        BodySerialNumber:42033,
+        LensSpecification:42034,
+        LensMake:42035,
+        LensModel:42036,
+        LensSerialNumber:42037,
+        Gamma:42240,
+    };
+
+
+    that.GPSIFD = {
+        GPSVersionID:0,
+        GPSLatitudeRef:1,
+        GPSLatitude:2,
+        GPSLongitudeRef:3,
+        GPSLongitude:4,
+        GPSAltitudeRef:5,
+        GPSAltitude:6,
+        GPSTimeStamp:7,
+        GPSSatellites:8,
+        GPSStatus:9,
+        GPSMeasureMode:10,
+        GPSDOP:11,
+        GPSSpeedRef:12,
+        GPSSpeed:13,
+        GPSTrackRef:14,
+        GPSTrack:15,
+        GPSImgDirectionRef:16,
+        GPSImgDirection:17,
+        GPSMapDatum:18,
+        GPSDestLatitudeRef:19,
+        GPSDestLatitude:20,
+        GPSDestLongitudeRef:21,
+        GPSDestLongitude:22,
+        GPSDestBearingRef:23,
+        GPSDestBearing:24,
+        GPSDestDistanceRef:25,
+        GPSDestDistance:26,
+        GPSProcessingMethod:27,
+        GPSAreaInformation:28,
+        GPSDateStamp:29,
+        GPSDifferential:30,
+        GPSHPositioningError:31,
+    };
+
+
+    that.InteropIFD = {
+        InteroperabilityIndex:1,
+    };
+
+    that.GPSHelper = {
+        degToDmsRational:function (degFloat) {
+            var degAbs = Math.abs(degFloat);
+            var minFloat = degAbs % 1 * 60;
+            var secFloat = minFloat % 1 * 60;
+            var deg = Math.floor(degAbs);
+            var min = Math.floor(minFloat);
+            var sec = Math.round(secFloat * 100);
+
+            return [[deg, 1], [min, 1], [sec, 100]];
+        },
+
+        dmsRationalToDeg:function (dmsArray, ref) {
+            var sign = (ref === 'S' || ref === 'W') ? -1.0 : 1.0;
+            var deg = dmsArray[0][0] / dmsArray[0][1] +
+                      dmsArray[1][0] / dmsArray[1][1] / 60.0 +
+                      dmsArray[2][0] / dmsArray[2][1] / 3600.0;
+
+            return deg * sign;
+        }
+    };
+    
+    
+    if (typeof exports !== 'undefined') {
+        if (typeof module !== 'undefined' && module.exports) {
+            exports = module.exports = that;
+        }
+        exports.piexif = that;
+    } else {
+        window.piexif = that;
+    }
+
+})();
+</script>
+<script>
+"use strict";
+const VERSION = "1.0";
+const LOGO = "data:image/png;base64,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";
+const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const DIAS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const $ = id => document.getElementById(id);
+
+// ---------------------------------------------------------------- estado guardado en el teléfono
+function leer(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function escribir(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { aviso("No se pudo guardar en el teléfono: " + e.message); } }
+let datos = leer("camaraObra", null) || {
+  obraId: "obra1",
+  obras: { obra1: { nombre: "Mi obra", lugarFijo: "", titulos: [], usos: {} } },
+  usuario: "", clima: true, logo: true, calidad: 0.92, ultimoTitulo: ""
+};
+const obra = () => datos.obras[datos.obraId];
+function guardarDatos() { escribir("camaraObra", datos); }
+
+function aviso(t, ms = 3500) { const a = $("aviso"); a.textContent = t; a.style.display = "block"; clearTimeout(aviso._t); aviso._t = setTimeout(() => a.style.display = "none", ms); }
+
+// ---------------------------------------------------------------- títulos
+function normalizar(t) { return (t || "").replace(/[’‘′´`]/g, "'").replace(/\s+/g, " ").trim(); }
+function pintarTitulos() {
+  const o = obra(), q = normalizar($("titulo").value).toLowerCase();
+  const todos = [...new Set([...o.titulos, ...Object.keys(o.usos)])];
+  // recientes primero (por último uso), luego la lista de la obra
+  const orden = todos.sort((a, b) => (o.usos[b] || 0) - (o.usos[a] || 0) || a.localeCompare(b, "es"));
+  const filtrados = q ? orden.filter(t => t.toLowerCase().includes(q)) : orden;
+  $("chips").innerHTML = "";
+  filtrados.slice(0, 40).forEach(t => {
+    const b = document.createElement("button"); b.className = "chip" + (t === normalizar($("titulo").value) ? " activo" : ""); b.textContent = t;
+    b.onclick = () => { $("titulo").value = t; datos.ultimoTitulo = t; guardarDatos(); pintarTitulos(); };
+    $("chips").appendChild(b);
+  });
+  $("listaTitulos").innerHTML = orden.map(t => `<option value="${t.replace(/"/g, "&quot;")}">`).join("");
+}
+$("titulo").addEventListener("input", () => { datos.ultimoTitulo = $("titulo").value; guardarDatos(); pintarTitulos(); });
+
+// ---------------------------------------------------------------- GPS, lugar y clima
+let gps = null, lugar = null, clima = null;
+function iniciarGps() {
+  if (!navigator.geolocation) { $("txtGps").textContent = "Este teléfono no da GPS"; return; }
+  navigator.geolocation.watchPosition(p => {
+    gps = { lat: p.coords.latitude, lon: p.coords.longitude, alt: p.coords.altitude, prec: p.coords.accuracy, t: Date.now() };
+    $("ptoGps").classList.add("ok");
+    $("txtGps").textContent = `GPS ±${Math.round(gps.prec)} m`;
+    buscarLugar(); buscarClima();
+  }, e => { $("ptoGps").classList.remove("ok"); $("txtGps").textContent = e.code === 1 ? "GPS sin permiso" : "Sin GPS"; },
+  { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
+}
+function distancia(a, b) { const R = 6371000, r = Math.PI / 180; const x = (b.lon - a.lon) * r * Math.cos((a.lat + b.lat) * r / 2), y = (b.lat - a.lat) * r; return Math.hypot(x, y) * R; }
+async function buscarLugar() {
+  const c = leer("camaraLugar", null);
+  if (c && distancia(c, gps) < 300) { lugar = c.texto; mostrarLugar(); return; }
+  if (!navigator.onLine || buscarLugar._en) return; buscarLugar._en = true;
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${gps.lat}&lon=${gps.lon}&zoom=16&accept-language=es`);
+    const j = await r.json(), a = j.address || {};
+    const partes = [a.hamlet || a.village || a.suburb || a.neighbourhood || a.quarter, a.town || a.city || a.municipality, a.state].filter(Boolean);
+    if (partes.length) { lugar = [...new Set(partes)].join(", "); escribir("camaraLugar", { lat: gps.lat, lon: gps.lon, texto: lugar }); }
+  } catch (e) { } finally { buscarLugar._en = false; mostrarLugar(); }
+}
+function mostrarLugar() { $("txtLugar").textContent = lugar || obra().lugarFijo || ""; }
+const CLIMA = { 0: "Despejado", 1: "Mayormente despejado", 2: "Parcialmente nublado", 3: "Cielo nublado", 45: "Niebla", 48: "Niebla", 51: "Llovizna", 53: "Llovizna", 55: "Llovizna", 61: "Lluvia ligera", 63: "Lluvia", 65: "Lluvia fuerte", 80: "Chubascos", 81: "Chubascos", 82: "Chubascos fuertes", 95: "Tormenta", 96: "Tormenta", 99: "Tormenta" };
+async function buscarClima() {
+  if (!datos.clima || !navigator.onLine || (clima && Date.now() - clima.t < 20 * 60000) || buscarClima._en) return;
+  buscarClima._en = true;
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${gps.lat.toFixed(3)}&longitude=${gps.lon.toFixed(3)}&current=temperature_2m,weather_code&timezone=auto`);
+    const j = await r.json();
+    clima = { texto: `${CLIMA[j.current.weather_code] || "—"} ${Math.round(j.current.temperature_2m)}°C`, t: Date.now() };
+    $("txtClima").textContent = clima.texto;
+  } catch (e) { } finally { buscarClima._en = false; }
+}
+
+// ---------------------------------------------------------------- sello y archivo
+const dos = n => String(n).padStart(2, "0");
+function hora12(d) { let h = d.getHours(); const am = h < 12 ? "AM" : "PM"; h = h % 12 || 12; return [`${dos(h)}:${dos(d.getMinutes())}`, am]; }
+function sinTildes(t) { return normalizar(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7e]/g, "?"); }
+function textoArchivo(t) { return normalizar(t).replace(/[\\/:*?"<>|]/g, "-").replace(/[. ]+$/, ""); }
+function gpsTexto(g) { return `${Math.abs(g.lat).toFixed(6)}°${g.lat >= 0 ? "N" : "S"}, ${Math.abs(g.lon).toFixed(6)}°${g.lon >= 0 ? "E" : "W"}`; }
+
+let imgLogo = new Image(); imgLogo.src = LOGO;
+
+function cargarImagen(file) {
+  return new Promise((ok, mal) => { const u = URL.createObjectURL(file), im = new Image(); im.onload = () => ok({ im, u }); im.onerror = () => mal(new Error("No se pudo abrir la foto")); im.src = u; });
+}
+
+function estampar(im, info) {
+  // lienzo del tamaño real (máx. 4032 px de lado largo; iOS no permite lienzos más grandes)
+  let W = im.naturalWidth, H = im.naturalHeight; const k = Math.min(1, 4032 / Math.max(W, H)); W = Math.round(W * k); H = Math.round(H * k);
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+  g.drawImage(im, 0, 0, W, H);
+  const u = Math.min(W, H) / 1000;           // unidad: milésimas del lado corto
+  const x0 = 20 * u, fam = '-apple-system, "Helvetica Neue", Arial, sans-serif';
+  const lineas = [info.titulo, info.fecha, info.lugar, info.clima, info.gps].filter(Boolean);
+  const tamTit = 46 * u, tamLin = 36 * u, sep = 14 * u;
+  const altoTexto = tamTit + (lineas.length - 1) * (tamLin + sep) + sep;
+  let y = H - 22 * u - altoTexto;              // arranque del bloque de texto
+  // caja de la hora
+  const [hh, ap] = info.hora, tamH = 78 * u, cajaH = 108 * u, cajaY = y - cajaH - 18 * u;
+  g.font = `600 ${tamH}px ${fam}`; const anchoH = g.measureText(hh).width; g.font = `600 ${tamH * 0.42}px ${fam}`; const anchoAP = g.measureText(ap).width;
+  const cajaW = x0 + anchoH + 12 * u + anchoAP + 26 * u + 58 * u + 24 * u;
+  g.fillStyle = "rgba(42,33,28,0.88)"; redondeado(g, x0, cajaY, cajaW, cajaH, 14 * u); g.fill();
+  g.fillStyle = "#fff"; g.textBaseline = "alphabetic";
+  g.font = `600 ${tamH}px ${fam}`; g.fillText(hh, x0 + 20 * u, cajaY + cajaH * 0.76);
+  g.font = `600 ${tamH * 0.42}px ${fam}`; g.fillText(ap, x0 + 20 * u + anchoH + 10 * u, cajaY + cajaH * 0.42);
+  const cx = x0 + cajaW - 24 * u - 29 * u, cy = cajaY + cajaH / 2;   // círculo naranja con check
+  g.fillStyle = "#EFA723"; g.beginPath(); g.arc(cx, cy, 29 * u, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = "#2a211c"; g.lineWidth = 6 * u; g.lineCap = "round"; g.lineJoin = "round";
+  g.beginPath(); g.moveTo(cx - 13 * u, cy + 1 * u); g.lineTo(cx - 3 * u, cy + 11 * u); g.lineTo(cx + 14 * u, cy - 10 * u); g.stroke();
+  // logo encima de la caja
+  if (info.logo && imgLogo.complete && imgLogo.naturalWidth) {
+    const lw = 320 * u, lh = lw * imgLogo.naturalHeight / imgLogo.naturalWidth;
+    g.save(); g.shadowColor = "rgba(0,0,0,.55)"; g.shadowBlur = 6 * u; g.drawImage(imgLogo, x0 + 4 * u, cajaY - lh - 10 * u, lw, lh); g.restore();
+  }
+  // barra naranja y líneas de texto con sombra para que se lean sobre cualquier fondo
+  g.fillStyle = "#EFA723"; g.fillRect(x0, y, 6 * u, altoTexto);
+  g.save(); g.shadowColor = "rgba(0,0,0,.75)"; g.shadowBlur = 8 * u; g.shadowOffsetY = 2 * u; g.fillStyle = "#fff";
+  let yy = y + tamTit;
+  lineas.forEach((t, i) => {
+    g.font = (i === 0 ? `700 ${tamTit}px ` : `400 ${tamLin}px `) + fam;
+    g.fillText(t, x0 + 26 * u, yy, W - x0 - 60 * u);
+    yy += (i === 0 ? sep : sep) + tamLin;
+  });
+  g.restore();
+  return c;
+}
+function redondeado(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+
+// metadatos: título en XPTitle (Windows lo muestra, admite tildes) y sin tildes en ImageDescription
+function ucs2(t) { const out = []; for (const ch of t) { const c = ch.charCodeAt(0); out.push(c & 255, c >> 8); } out.push(0, 0); return out; }
+function racional(v) { const d = Math.floor(v), m = Math.floor((v - d) * 60), s = Math.round(((v - d) * 60 - m) * 60 * 100); return [[d, 1], [m, 1], [s, 100]]; }
+function exif(info, d) {
+  const f = `${d.getFullYear()}:${dos(d.getMonth() + 1)}:${dos(d.getDate())} ${dos(d.getHours())}:${dos(d.getMinutes())}:${dos(d.getSeconds())}`;
+  const z = { "0th": {}, "Exif": {}, "GPS": {} }, I = piexif.ImageIFD, E = piexif.ExifIFD, G = piexif.GPSIFD;
+  z["0th"][I.Make] = "Lucia & Co."; z["0th"][I.Model] = "Camara de Obra"; z["0th"][I.Software] = "Camara de Obra " + VERSION;
+  z["0th"][I.DateTime] = f; z["0th"][I.ImageDescription] = sinTildes(info.titulo);
+  z["0th"][I.XPTitle] = ucs2(info.titulo); z["0th"][I.XPSubject] = ucs2(info.obra || "");
+  z["0th"][I.XPComment] = ucs2([info.titulo, info.lugar, info.clima].filter(Boolean).join(" | "));
+  if (info.usuario) { z["0th"][I.Artist] = sinTildes(info.usuario); z["0th"][I.XPAuthor] = ucs2(info.usuario); }
+  z["Exif"][E.DateTimeOriginal] = f; z["Exif"][E.DateTimeDigitized] = f;
+  if (info.g) {
+    z["GPS"][G.GPSLatitudeRef] = info.g.lat >= 0 ? "N" : "S"; z["GPS"][G.GPSLatitude] = racional(Math.abs(info.g.lat));
+    z["GPS"][G.GPSLongitudeRef] = info.g.lon >= 0 ? "E" : "W"; z["GPS"][G.GPSLongitude] = racional(Math.abs(info.g.lon));
+    if (info.g.alt != null) { z["GPS"][G.GPSAltitudeRef] = 0; z["GPS"][G.GPSAltitude] = [Math.round(Math.abs(info.g.alt)), 1]; }
+  }
+  return piexif.dump(z);
+}
+function blobADataURL(b) { return new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); }); }
+async function dataURLABlob(u) { return await (await fetch(u)).blob(); }
+
+// ---------------------------------------------------------------- tomar y procesar
+let pendientes = [];
+$("disparar").onclick = () => {
+  if (!normalizar($("titulo").value)) { aviso("Escribe o elige el título antes de tomar la foto."); $("titulo").focus(); return; }
+  $("camara").value = ""; $("camara").click();
+};
+$("camara").onchange = async () => {
+  const f = $("camara").files[0]; if (!f) return;
+  const titulo = normalizar($("titulo").value), o = obra();
+  $("disparar").disabled = true; $("procesando").style.display = "block";
+  try {
+    const d = new Date(f.lastModified && Math.abs(Date.now() - f.lastModified) < 10 * 60000 ? f.lastModified : Date.now());
+    const gUsable = gps && Date.now() - gps.t < 5 * 60000 ? gps : null;
+    const lugarTxt = (gUsable && lugar) || o.lugarFijo || lugar || "";
+    const info = {
+      titulo, obra: o.nombre, usuario: datos.usuario, logo: datos.logo, g: gUsable,
+      hora: hora12(d), fecha: `${DIAS[d.getDay()]}, ${dos(d.getDate())} de ${MESES[d.getMonth()]} ${d.getFullYear()}`,
+      lugar: lugarTxt, clima: datos.clima && clima && Date.now() - clima.t < 60 * 60000 ? clima.texto : "",
+      gps: gUsable ? gpsTexto(gUsable) : "Sin GPS"
+    };
+    const { im, u } = await cargarImagen(f);
+    const c = estampar(im, info); URL.revokeObjectURL(u);
+    const jpg = await new Promise(ok => c.toBlob(ok, "image/jpeg", Number(datos.calidad) || 0.92));
+    const conExif = piexif.insert(exif(info, d), await blobADataURL(jpg));
+    const blob = await dataURLABlob(conExif);
+    const lugarCorto = textoArchivo((lugarTxt.split(",")[0] || "Obra"));
+    const nombre = `${d.getFullYear()}${dos(d.getMonth() + 1)}${dos(d.getDate())}_${dos(d.getHours())}${dos(d.getMinutes())}${dos(d.getSeconds())}_${lugarCorto}_Título-${textoArchivo(titulo)}.jpg`;
+    pendientes.push({ nombre, archivo: new File([blob], nombre, { type: "image/jpeg", lastModified: d.getTime() }), mini: URL.createObjectURL(blob) });
+    o.usos[titulo] = Date.now(); if (!o.titulos.includes(titulo)) o.titulos.push(titulo); guardarDatos();
+    pintarBandeja(); pintarTitulos();
+    if (!gUsable) aviso("Foto guardada sin GPS: revisa el permiso de ubicación.");
+  } catch (e) { aviso("No se pudo procesar la foto: " + e.message, 6000); }
+  finally { $("disparar").disabled = false; $("procesando").style.display = "none"; }
+};
+function pintarBandeja() {
+  $("bandeja").innerHTML = ""; $("nPend").textContent = pendientes.length; $("vacio").style.display = pendientes.length ? "none" : "block";
+  $("guardar").disabled = $("limpiar").disabled = !pendientes.length;
+  $("guardar").textContent = pendientes.length > 1 ? `Guardar ${pendientes.length} en Fotos` : "Guardar en Fotos";
+  pendientes.forEach((p, i) => {
+    const fig = document.createElement("figure");
+    fig.innerHTML = `<img src="${p.mini}" alt=""><figcaption>${p.nombre.split("_Título-")[1].replace(/\.jpg$/, "")}</figcaption><button aria-label="Quitar">×</button>`;
+    fig.querySelector("button").onclick = () => { URL.revokeObjectURL(p.mini); pendientes.splice(i, 1); pintarBandeja(); };
+    $("bandeja").appendChild(fig);
+  });
+}
+$("guardar").onclick = async () => {
+  const files = pendientes.map(p => p.archivo);
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try { await navigator.share({ files }); pendientes.forEach(p => URL.revokeObjectURL(p.mini)); pendientes = []; pintarBandeja(); aviso("Listo. Si elegiste 'Guardar imagen', ya están en Fotos."); }
+    catch (e) { if (e.name !== "AbortError") aviso("No se pudo compartir: " + e.message, 6000); }
+  } else {
+    pendientes.forEach(p => { const a = document.createElement("a"); a.href = p.mini; a.download = p.nombre; document.body.appendChild(a); a.click(); a.remove(); });
+    aviso("Descargadas (este navegador no permite guardar directo en Fotos).");
+  }
+};
+$("limpiar").onclick = () => { if (confirmarVaciar()) { pendientes.forEach(p => URL.revokeObjectURL(p.mini)); pendientes = []; pintarBandeja(); } };
+function confirmarVaciar() { return pendientes.length < 2 || window.confirm(`¿Quitar las ${pendientes.length} fotos sin guardarlas?`); }
+window.addEventListener("beforeunload", e => { if (pendientes.length) { e.preventDefault(); e.returnValue = ""; } });
+
+// ---------------------------------------------------------------- ajustes
+function pintarAjustes() {
+  $("selObra").innerHTML = Object.entries(datos.obras).map(([id, o]) => `<option value="${id}">${o.nombre.replace(/</g, "&lt;")}</option>`).join("");
+  $("selObra").value = datos.obraId; const o = obra();
+  $("nomObra").value = o.nombre; $("lugarFijo").value = o.lugarFijo || ""; $("usuario").value = datos.usuario || "";
+  $("optClima").checked = !!datos.clima; $("optLogo").checked = !!datos.logo; $("calidad").value = String(datos.calidad || 0.92);
+  $("txtTitulos").value = o.titulos.join("\n");
+}
+function leerAjustes() {
+  const o = obra(); o.nombre = $("nomObra").value.trim() || "Mi obra"; o.lugarFijo = $("lugarFijo").value.trim();
+  datos.usuario = $("usuario").value.trim(); datos.clima = $("optClima").checked; datos.logo = $("optLogo").checked; datos.calidad = Number($("calidad").value);
+  o.titulos = [...new Set($("txtTitulos").value.split(/\r?\n/).map(normalizar).filter(Boolean))];
+  guardarDatos(); $("obraActual").textContent = o.nombre; mostrarLugar(); pintarTitulos();
+}
+$("abrirAjustes").onclick = () => { pintarAjustes(); $("ajustes").showModal(); };
+$("cerrarAjustes").onclick = () => { leerAjustes(); $("ajustes").close(); };
+$("selObra").onchange = () => { leerAjustes(); datos.obraId = $("selObra").value; guardarDatos(); pintarAjustes(); };
+$("nuevaObra").onclick = () => { leerAjustes(); const id = "obra" + Date.now(); datos.obras[id] = { nombre: "Nueva obra", lugarFijo: "", titulos: [], usos: {} }; datos.obraId = id; guardarDatos(); pintarAjustes(); $("nomObra").focus(); };
+$("borrarObra").onclick = () => {
+  if (Object.keys(datos.obras).length < 2) { aviso("Debe quedar al menos una obra."); return; }
+  if (!window.confirm(`¿Borrar la obra "${obra().nombre}" y su lista de títulos?`)) return;
+  delete datos.obras[datos.obraId]; datos.obraId = Object.keys(datos.obras)[0]; guardarDatos(); pintarAjustes();
+};
+$("cargarTxt").onclick = () => $("archivoTxt").click();
+$("archivoTxt").onchange = async () => {
+  const f = $("archivoTxt").files[0]; if (!f) return;
+  const nuevos = (await f.text()).split(/\r?\n/).map(normalizar).filter(Boolean);
+  const actual = $("txtTitulos").value.split(/\r?\n/).map(normalizar).filter(Boolean);
+  $("txtTitulos").value = [...new Set([...actual, ...nuevos])].join("\n"); aviso(`${nuevos.length} títulos cargados.`);
+};
+$("exportarTxt").onclick = async () => {
+  const f = new File([$("txtTitulos").value], `titulos_${textoArchivo(obra().nombre)}.txt`, { type: "text/plain" });
+  if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (e) { } }
+  else { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); }
+};
+
+// ---------------------------------------------------------------- inicio
+$("version").textContent = VERSION;
+$("obraActual").textContent = obra().nombre;
+$("titulo").value = datos.ultimoTitulo || "";
+pintarTitulos(); pintarBandeja(); mostrarLugar(); iniciarGps();
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+window.__prueba = { estampar, exif, hora12, gpsTexto };
+</script>
+</body>
+</html>
