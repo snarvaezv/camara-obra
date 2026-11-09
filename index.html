@@ -70,18 +70,28 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 #visor{position:relative;flex:1;min-height:0}
 #visor video,#visor canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
-#controles{display:flex;flex-direction:column;gap:8px;padding:8px 14px 0;background:rgba(0,0,0,.6)}
-#controles:empty{display:none}
-.filaCtl{display:flex;align-items:center;gap:8px;color:#fff;font-size:13px}
-.filaCtl .lente{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;border-radius:999px;min-width:46px;padding:6px 10px;font-weight:600}
-.filaCtl .lente.activo{background:#F2A900;color:#1f2328;border-color:#F2A900}
-.filaCtl input[type=range]{flex:1;accent-color:#F2A900}
-.filaCtl .val{min-width:44px;text-align:right}
+#herramientas{position:absolute;z-index:3;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+#herrIzq{position:absolute;z-index:3;display:none;gap:10px}
+#herramientas > *{pointer-events:auto}
+#zooms{gap:8px}
+.grupo{display:flex;flex-direction:column;align-items:center;gap:10px}
+.redondo{width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px}
+.redondo.activo{background:var(--ambar);color:var(--negro)}
+.zoom{width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.zoom.activo{width:44px;height:44px;font-size:14px;color:var(--ambar);background:rgba(0,0,0,.7);box-shadow:0 0 0 1.5px var(--ambar)}
+#panelLuz{position:absolute;z-index:4;left:50%;top:64px;transform:translateX(-50%);width:min(78%,360px);display:none;align-items:center;gap:10px;background:rgba(0,0,0,.6);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px}
+#panelLuz input{flex:1;accent-color:var(--ambar)}
+#panelLuz .val{min-width:34px;text-align:right}
+#zoomTxt{position:absolute;z-index:4;left:50%;top:40%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);color:var(--ambar);font-size:22px;font-weight:700;border-radius:12px;padding:6px 14px;display:none}
+#visor{touch-action:none}
 #vivoAbajo{display:flex;align-items:center;justify-content:space-between;padding:14px 22px calc(18px + env(safe-area-inset-bottom));background:rgba(0,0,0,.6)}
-#vivoAbajo .lado{width:84px;display:flex;justify-content:center}
+#vivoAbajo .lado{width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#ccc;font-size:11px}
 #obturador{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:#F2A900}
 #obturador:active{transform:scale(.94)}
-#miniVivo{width:56px;height:56px;border-radius:10px;object-fit:cover;background:#333;border:2px solid #fff}
+#miniVivo{position:relative;width:56px;height:56px;border-radius:10px;border:2px solid #fff;background:#2a2a2a;color:#bbb;padding:0;overflow:visible;display:flex;align-items:center;justify-content:center;font-size:24px}
+#miniVivo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:8px}
+#miniVivo .insignia{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:11px;background:var(--naranja);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+#miniVivo .insignia:empty{display:none}
 #cerrarVivo{border:0;border-radius:50%;width:52px;height:52px;background:rgba(255,255,255,.14);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center}
 #cerrarVivo .ic{width:26px;height:26px}
 #ver{position:fixed;inset:0;background:#000;z-index:30;display:none;flex-direction:column}
@@ -101,12 +111,10 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   #vivo{flex-direction:row}
   #vivoArriba{flex-direction:column;width:min(30vw,190px);overflow-x:hidden;overflow-y:auto;padding:calc(10px + env(safe-area-inset-top)) 8px 10px calc(8px + env(safe-area-inset-left))}
   #vivoArriba .chip{white-space:normal;text-align:left}
-  #controles{position:absolute;z-index:2;left:calc(min(30vw,190px) + 10px);right:calc(120px + env(safe-area-inset-right));bottom:10px;border-radius:12px;padding:8px 12px}
-  #vivoAbajo{flex-direction:column-reverse;justify-content:space-between;width:calc(110px + env(safe-area-inset-right));padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 14px 14px}
+  #vivoAbajo{flex-direction:column;justify-content:space-between;width:calc(112px + env(safe-area-inset-right));padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) 14px}
   #vivoAbajo .lado{width:auto}
   #ver{flex-direction:column}
 }
-#resVivo{position:absolute;right:8px;top:8px;color:#fff;font-size:12px;background:rgba(0,0,0,.45);padding:2px 6px;border-radius:6px}
 </style>
 </head>
 <body>
@@ -120,6 +128,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
  <symbol id="i-basura" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
  <symbol id="i-guardar" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
  <symbol id="i-linterna" viewBox="0 0 24 24"><path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12z"/><path d="M6 6h12M12 12v1"/></symbol>
+ <symbol id="i-imagen" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+ <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
  <symbol id="i-movil" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
 </svg>
 <header>
@@ -164,8 +174,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
     <div class="ayuda">Si la dejas vacía, la app la saca del GPS con mapas abiertos (OpenStreetMap), y a veces sale el nombre de un barrio o condominio cercano. Las coordenadas siempre son las del GPS.</div></div>
   <div class="campo"><label for="usuario">Quién toma las fotos</label><input id="usuario" placeholder="Sebastián Narváez"></div>
   <div class="campo"><label for="modo">Cámara</label>
-    <select id="modo"><option value="vivo">En vivo, con el sello en pantalla</option><option value="iphone">Cámara del iPhone (máxima calidad)</option></select>
-    <div class="ayuda">En vivo ves el sello antes de disparar y tomas foto tras foto sin salir de la app. La cámara del iPhone da más calidad (HDR) pero hay que confirmar cada foto.</div></div>
+    <select id="modo"><option value="vivo">En vivo, con el sello en pantalla</option><option value="iphone">Cámara del teléfono (máxima calidad)</option></select>
+    <div class="ayuda">En vivo ves el sello antes de disparar y tomas foto tras foto sin salir de la app. La cámara del teléfono da más calidad (HDR) pero hay que confirmar cada foto.</div></div>
   <label class="check"><input type="checkbox" id="optClima"> Mostrar clima en la foto (necesita señal)</label>
   <label class="check"><input type="checkbox" id="optLogo"> Logo de Lucía &amp; Co. en la foto</label>
   <div class="campo"><label for="calidad">Calidad JPG</label>
@@ -182,12 +192,17 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 
 <section id="vivo" aria-label="Cámara en vivo">
   <div id="vivoArriba"></div>
-  <div id="visor"><video id="video" playsinline muted autoplay></video><canvas id="capaSello"></canvas><div id="flash"></div><span id="resVivo"></span></div>
-  <div id="controles"></div>
+  <div id="visor"><video id="video" playsinline muted autoplay></video><canvas id="capaSello"></canvas><div id="flash"></div>
+    <div id="herrIzq">
+      <button class="redondo" id="btnLinterna" aria-label="Linterna" hidden><svg class="ic"><use href="#i-linterna"/></svg></button>
+      <button class="redondo" id="btnLuz" aria-label="Exposición" hidden><svg class="ic"><use href="#i-sol"/></svg></button></div>
+    <div id="herramientas"><div class="grupo" id="zooms"></div></div>
+    <div id="panelLuz"><svg class="ic"><use href="#i-sol"/></svg><input type="range" id="rangoLuz"><span class="val" id="valLuz"></span></div>
+    <div id="zoomTxt"></div></div>
   <div id="vivoAbajo">
-    <div class="lado"><button id="cerrarVivo" aria-label="Cerrar"><svg class="ic"><use href="#i-cerrar"/></svg></button></div>
+    <div class="lado"><button id="miniVivo" aria-label="Ver fotos tomadas"><svg class="ic"><use href="#i-imagen"/></svg><img id="miniImg" alt="" hidden><span class="insignia" id="miniN"></span></button>Fotos</div>
     <button id="obturador" aria-label="Tomar foto"></button>
-    <div class="lado"><img id="miniVivo" alt=""></div>
+    <div class="lado"><button id="cerrarVivo" aria-label="Cerrar"><svg class="ic"><use href="#i-cerrar"/></svg></button>Cerrar</div>
   </div>
 </section>
 
@@ -2695,7 +2710,7 @@ SOFTWARE.
 </script>
 <script>
 "use strict";
-const VERSION = "1.6";
+const VERSION = "1.7";
 const LOGO = "data:image/png;base64,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";
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const DIAS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
@@ -2860,7 +2875,7 @@ function tituloListo() {
 function abrirIphone() { if (tituloListo()) { $("camara").value = ""; $("camara").click(); } }
 $("disparar").onclick = () => { if (!tituloListo()) return; (datos.modo || "vivo") === "vivo" ? abrirVivo() : abrirIphone(); };
 $("otraCamara").onclick = () => { if (!tituloListo()) return; (datos.modo || "vivo") === "vivo" ? abrirIphone() : abrirVivo(); };
-function pintarModo() { $("otraCamara").innerHTML = '<svg class="ic"><use href="#i-movil"/></svg>' + ((datos.modo || "vivo") === "vivo" ? "Usar la cámara del iPhone para esta foto" : "Usar la cámara en vivo con sello"); }
+function pintarModo() { $("otraCamara").innerHTML = '<svg class="ic"><use href="#i-movil"/></svg>' + ((datos.modo || "vivo") === "vivo" ? "Usar la cámara del teléfono para esta foto" : "Usar la cámara en vivo con sello"); }
 
 // ---------------------------------------------------------------- cámara en vivo con el sello en pantalla
 let flujo = null, relojSello = null;
@@ -2870,7 +2885,6 @@ async function encenderCamara(deviceId) {
   if (deviceId) video.deviceId = { exact: deviceId }; else video.facingMode = { ideal: "environment" };
   flujo = await navigator.mediaDevices.getUserMedia({ audio: false, video });
   const v = $("video"); v.srcObject = flujo; await v.play();
-  $("resVivo").textContent = `${v.videoWidth}×${v.videoHeight}`;
   await armarControles();
 }
 async function abrirVivo() {
@@ -2879,7 +2893,7 @@ async function abrirVivo() {
     try { await encenderCamara(datos.lente || null); } catch (e) { datos.lente = null; await encenderCamara(null); }
     relojSello = setInterval(pintarCapa, 1000); pintarCapa();
   } catch (e) {
-    cerrarVivo(); aviso("No se pudo abrir la cámara en vivo (" + e.name + "). Uso la cámara del iPhone.", 5000); abrirIphone();
+    cerrarVivo(); aviso("No se pudo abrir la cámara en vivo (" + e.name + "). Uso la cámara del teléfono.", 5000); abrirIphone();
   }
 }
 // ---------------------------------------------------------------- orientación
@@ -2915,48 +2929,84 @@ function nombreLente(l) {
   if (/ultra/i.test(l)) return ["0,5x", 0]; if (/tele/i.test(l)) return ["Tele", 3];
   return ["1x", 1];
 }
+// zoom estilo Timemark: botones redondos sobre la imagen (lente gran angular + niveles de zoom) y pellizco para zoom fino
+let pista = null, capsZoom = null, zoomActual = 1, lentesTel = [];
+const fmtZ = z => (Math.round(z * 10) / 10).toString().replace(".", ",");
 async function armarControles() {
-  const cont = $("controles"); cont.innerHTML = "";
-  const pista = flujo.getVideoTracks()[0];
+  pista = flujo.getVideoTracks()[0];
   const caps = pista.getCapabilities ? pista.getCapabilities() : {}, ajus = pista.getSettings ? pista.getSettings() : {};
   let traseras = [];
-  try { traseras = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput" && !/front|frontal|delantera/i.test(d.label)); } catch (e) { }
-  // diagnóstico (se ve en Ajustes) para saber qué deja controlar el iPhone
-  datos.diagCamara = `Cámaras: ${traseras.map(d => d.label || "?").join(" · ") || "—"} | Controles: ${Object.keys(caps).filter(k => !["width", "height", "aspectRatio", "frameRate", "deviceId", "groupId", "facingMode", "resizeMode"].includes(k)).join(", ") || "ninguno"}`;
+  try { traseras = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput" && !/front|frontal|delantera|facing front/i.test(d.label)); } catch (e) { }
+  const v = $("video");
+  // diagnóstico (se ve en Ajustes) para saber qué deja controlar el teléfono
+  datos.diagCamara = `${v.videoWidth}×${v.videoHeight} | Cámaras: ${traseras.map(d => d.label || "?").join(" · ") || "—"} | Controles: ${Object.keys(caps).filter(k => !["width", "height", "aspectRatio", "frameRate", "deviceId", "groupId", "facingMode", "resizeMode"].includes(k)).join(", ") || "ninguno"}${caps.zoom ? ` | zoom ${caps.zoom.min}–${caps.zoom.max}` : ""}`;
+  const vistas = new Set();
+  lentesTel = traseras.map(d => ({ id: d.deviceId, n: nombreLente(d.label) })).filter(x => x.n && !vistas.has(x.n[0]) && vistas.add(x.n[0]));
+  const ultra = lentesTel.find(x => x.n[0] === "0,5x"), tele = lentesTel.find(x => x.n[0] === "Tele"), principal = lentesTel.find(x => x.n[0] === "1x");
+  const actualId = ajus.deviceId, enUltra = ultra && actualId === ultra.id, enTele = tele && actualId === tele.id;
+  capsZoom = caps.zoom && caps.zoom.max > caps.zoom.min ? caps.zoom : null;
+  zoomActual = ajus.zoom || (capsZoom ? Math.max(1, capsZoom.min) : 1);
+  if (!enUltra && !enTele && capsZoom) datos.zoomMax = capsZoom.max;   // se recuerda el zoom del lente principal
   guardarDatos();
-  const vistas = new Set(), lentes = traseras.map(d => ({ d, n: nombreLente(d.label) }))
-    .filter(x => x.n && !vistas.has(x.n[0]) && vistas.add(x.n[0])).sort((a, b) => a.n[1] - b.n[1]);
-  if (lentes.length > 1) {
-    const f = document.createElement("div"); f.className = "filaCtl";
-    const actual = lentes.some(x => x.d.deviceId === ajus.deviceId) ? ajus.deviceId : (lentes.find(x => x.n[0] === "1x") || lentes[0]).d.deviceId;
-    lentes.forEach(({ d, n }) => {
-      const b = document.createElement("button"); b.className = "lente" + (d.deviceId === actual ? " activo" : ""); b.textContent = n[0];
-      b.onclick = async () => { datos.lente = d.deviceId; guardarDatos(); try { await encenderCamara(d.deviceId); pintarCapa(); } catch (e) { aviso("No se pudo cambiar de lente."); } };
-      f.appendChild(b);
-    });
-    cont.appendChild(f);
-  }
-  const deslizador = (etq, cap, valor, aplicar, fmt) => {
-    const f = document.createElement("div"); f.className = "filaCtl";
-    f.innerHTML = `<span>${etq}</span><input type="range" min="${cap.min}" max="${cap.max}" step="${cap.step || 0.1}" value="${valor}"><span class="val"></span>`;
-    const r = f.querySelector("input"), out = f.querySelector(".val"); out.textContent = fmt(+r.value);
-    r.oninput = () => { out.textContent = fmt(+r.value); aplicar(+r.value); };
-    cont.appendChild(f);
-  };
-  if (caps.zoom && caps.zoom.max > caps.zoom.min)
-    deslizador("Zoom", caps.zoom, ajus.zoom || caps.zoom.min, v => pista.applyConstraints({ advanced: [{ zoom: v }] }).catch(() => { }), v => v.toFixed(1).replace(".", ",") + "x");
-  if (caps.exposureCompensation && caps.exposureCompensation.max > caps.exposureCompensation.min) {
-    const ini = datos.exposicion || 0; if (ini) pista.applyConstraints({ advanced: [{ exposureCompensation: ini }] }).catch(() => { });
-    deslizador("Luz", caps.exposureCompensation, ini, v => { datos.exposicion = v; guardarDatos(); pista.applyConstraints({ advanced: [{ exposureCompensation: v }] }).catch(() => { }); }, v => (v > 0 ? "+" : "") + v.toFixed(1).replace(".", ","));
-  }
-  if (caps.torch) {
-    const f = document.createElement("div"); f.className = "filaCtl"; const b = document.createElement("button"); b.className = "lente"; b.innerHTML = '<svg class="ic"><use href="#i-linterna"/></svg>'; b.setAttribute("aria-label", "Linterna");
-    let on = false; b.onclick = () => { on = !on; b.classList.toggle("activo", on); pista.applyConstraints({ advanced: [{ torch: on }] }).catch(() => aviso("La linterna no respondió.")); };
-    f.appendChild(b); cont.appendChild(f);
+  // opciones: [texto, lente (null = la actual), zoom]
+  const ops = [], idPrin = principal ? principal.id : null, maxPrin = (!enUltra && !enTele && capsZoom) ? capsZoom.max : (datos.zoomMax || 1);
+  if (ultra) ops.push({ t: "0,5", lente: ultra.id, z: null });
+  else if (capsZoom && capsZoom.min < 0.95) ops.push({ t: fmtZ(capsZoom.min), lente: null, z: capsZoom.min });   // Android: el gran angular va dentro del zoom
+  if (ops.length || maxPrin >= 2) ops.push({ t: "1", lente: idPrin, z: 1 });
+  [2, maxPrin >= 5 ? 5 : 3].filter(z => maxPrin >= z).forEach(z => ops.push({ t: String(z), lente: idPrin, z }));
+  if (tele) ops.push({ t: "T", lente: tele.id, z: null });
+  const cont = $("zooms"); cont.innerHTML = "";
+  ops.forEach(o => {
+    const b = document.createElement("button"); b.className = "zoom"; b.dataset.t = o.t; b.textContent = o.t; o.b = b;
+    b.onclick = async () => {
+      try {
+        if (o.lente && o.lente !== actualId) { datos.lente = o.lente; guardarDatos(); await encenderCamara(o.lente); pintarCapa(); }
+        else if (!o.lente && !capsZoom) return;
+        if (o.z != null) aplicarZoom(o.z);
+      } catch (e) { aviso("No se pudo cambiar de lente."); }
+    };
+    cont.appendChild(b);
+  });
+  cont.ops = ops; cont.enUltra = enUltra; cont.enTele = enTele;
+  marcarZoom();
+  // linterna y exposición
+  $("btnLinterna").hidden = !caps.torch; $("btnLinterna").classList.remove("activo");
+  const ex = caps.exposureCompensation; $("btnLuz").hidden = !(ex && ex.max > ex.min); $("panelLuz").style.display = "none";
+  if (ex && ex.max > ex.min) {
+    const r = $("rangoLuz"); r.min = ex.min; r.max = ex.max; r.step = ex.step || 0.1; r.value = datos.exposicion || 0;
+    const fmt = x => (x > 0 ? "+" : "") + (+x).toFixed(1).replace(".", ","); $("valLuz").textContent = fmt(r.value);
+    if (datos.exposicion) pista.applyConstraints({ advanced: [{ exposureCompensation: +datos.exposicion }] }).catch(() => { });
+    r.oninput = () => { $("valLuz").textContent = fmt(r.value); datos.exposicion = +r.value; guardarDatos(); pista.applyConstraints({ advanced: [{ exposureCompensation: +r.value }] }).catch(() => { }); ocultarLuzLuego(); };
   }
 }
+function marcarZoom() {
+  const cont = $("zooms"), ops = cont.ops || []; if (!ops.length) return;
+  let activo;
+  if (cont.enUltra) activo = ops.find(o => o.t === "0,5"); else if (cont.enTele) activo = ops.find(o => o.t === "T");
+  else activo = ops.filter(o => o.z != null).reduce((a, o) => !a || Math.abs(o.z - zoomActual) < Math.abs(a.z - zoomActual) ? o : a, null);
+  ops.forEach(o => { o.b.classList.toggle("activo", o === activo); o.b.textContent = o.t; });
+  if (activo) activo.b.textContent = (activo.z != null && !cont.enUltra && !cont.enTele ? fmtZ(zoomActual) : activo.t) + (activo.t === "T" ? "" : "x");
+}
+let rafZoom = 0;
+function aplicarZoom(z) {
+  if (!capsZoom || !pista) return; zoomActual = Math.min(capsZoom.max, Math.max(capsZoom.min, z)); marcarZoom();
+  cancelAnimationFrame(rafZoom); rafZoom = requestAnimationFrame(() => pista.applyConstraints({ advanced: [{ zoom: zoomActual }] }).catch(() => { }));
+}
+// pellizco para zoom fino
+let pellizco = null;
+const distT = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+$("visor").addEventListener("touchstart", e => { if (e.touches.length === 2 && capsZoom) { pellizco = { d: distT(e.touches), z: zoomActual }; e.preventDefault(); } }, { passive: false });
+$("visor").addEventListener("touchmove", e => {
+  if (!pellizco || e.touches.length !== 2) return; e.preventDefault();
+  aplicarZoom(pellizco.z * distT(e.touches) / pellizco.d);
+  const zt = $("zoomTxt"); zt.textContent = fmtZ(zoomActual) + "x"; zt.style.display = "block"; clearTimeout(zt._t); zt._t = setTimeout(() => zt.style.display = "none", 800);
+}, { passive: false });
+$("visor").addEventListener("touchend", e => { if (e.touches.length < 2) pellizco = null; });
+$("btnLinterna").onclick = () => { const b = $("btnLinterna"), on = !b.classList.contains("activo"); b.classList.toggle("activo", on); pista.applyConstraints({ advanced: [{ torch: on }] }).catch(() => { b.classList.remove("activo"); aviso("La linterna no respondió."); }); };
+$("btnLuz").onclick = () => { const p = $("panelLuz"), ver = p.style.display !== "flex"; p.style.display = ver ? "flex" : "none"; $("btnLuz").classList.toggle("activo", ver); if (ver) ocultarLuzLuego(); };
+function ocultarLuzLuego() { clearTimeout(ocultarLuzLuego._t); ocultarLuzLuego._t = setTimeout(() => { $("panelLuz").style.display = "none"; $("btnLuz").classList.remove("activo"); }, 4000); }
 function cerrarVivo() {
-  $("video").style.cssText = "";
+  $("video").style.cssText = ""; $("herramientas").style.display = "none"; $("herrIzq").style.display = "none"; $("panelLuz").style.display = "none";
   clearInterval(relojSello); if (flujo) flujo.getTracks().forEach(t => t.stop()); flujo = null;
   $("vivo").classList.remove("abierto");
 }
@@ -2971,6 +3021,10 @@ function pintarCapa() {
     Object.assign(v.style, { inset: "auto", width: h + "px", height: w + "px", left: (caja.width - h) / 2 + "px", top: (caja.height - w) / 2 + "px", transform: `rotate(${-geo.mostrar}deg)` });
   } else { v.style.cssText = ""; }
   cv.style.inset = "auto"; cv.style.width = w + "px"; cv.style.height = h + "px"; cv.style.left = (caja.width - w) / 2 + "px"; cv.style.top = (caja.height - h) / 2 + "px";
+  const mx = (caja.width - w) / 2, my = (caja.height - h) / 2;
+  Object.assign($("herramientas").style, { display: "flex", right: mx + 10 + "px", top: my + 8 + "px", bottom: my + 8 + "px" });
+  Object.assign($("herrIzq").style, { display: "flex", left: mx + 10 + "px", top: my + 10 + "px" });
+  $("panelLuz").style.top = my + 62 + "px";
   cv.width = Math.round(w * esc); cv.height = Math.round(h * esc);
   const g = cv.getContext("2d"); g.clearRect(0, 0, cv.width, cv.height);
   if (!geo.extra) { dibujarSello(g, cv.width, cv.height, infoActual(new Date())); return; }
@@ -2987,9 +3041,9 @@ function pintarVivo() {
     b.onclick = () => { $("titulo").value = t; datos.ultimoTitulo = t; guardarDatos(); pintarTitulos(); pintarVivo(); pintarCapa(); }; $("vivoArriba").appendChild(b); });
   const otro = document.createElement("button"); otro.className = "chip"; otro.innerHTML = '<svg class="ic"><use href="#i-lapiz"/></svg> Otro título';
   otro.onclick = () => { cerrarVivo(); $("titulo").select(); $("titulo").focus(); }; $("vivoArriba").appendChild(otro);
-  const ult = pendientes[pendientes.length - 1]; $("miniVivo").src = ult ? ult.mini : ""; $("miniVivo").style.visibility = ult ? "visible" : "hidden";
+  const ult = pendientes[pendientes.length - 1]; $("miniImg").hidden = !ult; if (ult) $("miniImg").src = ult.mini; $("miniN").textContent = pendientes.length || "";
 }
-$("miniVivo").onclick = () => { if (pendientes.length) abrirVer(pendientes.length - 1); };
+$("miniVivo").onclick = () => { if (pendientes.length) abrirVer(pendientes.length - 1); else aviso("Aún no hay fotos por guardar."); };
 $("obturador").onclick = async () => {
   const v = $("video"); if (!v.videoWidth || $("obturador").disabled) return;
   $("obturador").disabled = true; $("flash").style.opacity = .8; setTimeout(() => $("flash").style.opacity = 0, 120);
@@ -3109,10 +3163,17 @@ $("edAplicar").onclick = async () => {
   finally { $("edAplicar").disabled = false; }
 };
 
+const ES_ANDROID = /Android/i.test(navigator.userAgent);
 $("guardar").onclick = async () => {
   const files = pendientes.map(p => p.archivo);
+  if (ES_ANDROID) {
+    // Android: se descargan con su nombre (quedan en Descargas y aparecen en la galería)
+    for (const p of pendientes) { const a = document.createElement("a"); a.href = p.mini; a.download = p.nombre; document.body.appendChild(a); a.click(); a.remove(); await new Promise(ok => setTimeout(ok, 400)); }
+    if (window.confirm(`¿Quedaron descargadas las ${pendientes.length} fotos? Si dices que sí, se quitan de la bandeja.`)) { pendientes.forEach(p => URL.revokeObjectURL(p.mini)); pendientes = []; await bandejaVaciar(); pintarBandeja(); pintarVivo(); }
+    return;
+  }
   if (navigator.canShare && navigator.canShare({ files })) {
-    try { await navigator.share({ files }); pendientes.forEach(p => URL.revokeObjectURL(p.mini)); pendientes = []; await bandejaVaciar(); pintarBandeja(); pintarVivo(); aviso("Listo. En Fotos el iPhone les pone nombre IMG_…, pero el título va guardado dentro de la foto. Con 'Guardar en Archivos' conservan el nombre con el título.", 7000); }
+    try { await navigator.share({ files }); pendientes.forEach(p => URL.revokeObjectURL(p.mini)); pendientes = []; await bandejaVaciar(); pintarBandeja(); pintarVivo(); aviso("Listo. En Fotos el iPhone les pone nombre IMG_…; el título va guardado dentro de la foto y el Gestor lo lee.", 6000); }
     catch (e) { if (e.name !== "AbortError") aviso("No se pudo compartir: " + e.message, 6000); }
   } else {
     pendientes.forEach(p => { const a = document.createElement("a"); a.href = p.mini; a.download = p.nombre; document.body.appendChild(a); a.click(); a.remove(); });
