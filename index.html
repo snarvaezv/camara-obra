@@ -86,8 +86,39 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .campo .ayuda{font-size:13px;color:var(--suave);margin-top:3px}
 .check{display:flex;align-items:center;gap:10px;margin:8px 0}
 .check input{width:22px;height:22px}
-#aviso{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));background:#1f2328;color:#fff;padding:12px 14px;border-radius:12px;font-size:15px;display:none;z-index:9}
+#aviso{z-index:60 !important;position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));background:#1f2328;color:#fff;padding:12px 14px;border-radius:12px;font-size:15px;display:none;z-index:9}
 #procesando{display:none;color:var(--gris);font-weight:600;margin-top:10px}
+#escanear{width:100%;margin-top:10px;border:2px solid var(--negro);border-radius:16px;background:#fff;color:var(--negro);font-size:18px;font-weight:700;padding:14px;display:flex;align-items:center;justify-content:center;gap:10px}
+#escaner{position:fixed;inset:0;z-index:22;background:var(--fondo);display:none;flex-direction:column}
+#escaner.abierto{display:flex}
+#escaner .escCab{display:flex;align-items:center;gap:12px;background:var(--negro);color:#fff;border-bottom:4px solid var(--naranja);padding:calc(10px + env(safe-area-inset-top)) 14px 12px}
+#escaner .escCab b{flex:1;font-size:20px}
+#escaner .escCab button{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px}
+#escN{color:var(--ambar);font-weight:700}
+#escaner .escCuerpo{flex:1;overflow:auto;padding:14px 16px}
+#escaner label.rot2{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);margin:12px 0 6px}
+#escaner select{width:100%;font-size:17px;padding:10px;border:1px solid var(--linea);border-radius:10px;background:#fff}
+#escaner .listaT{max-height:160px}
+#escPaginas{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:12px}
+.pag{position:relative;background:#fff;border:1px solid var(--linea);border-radius:8px;overflow:hidden;aspect-ratio:.72}
+.pag img{width:100%;height:100%;object-fit:contain;background:#eee}
+.pag span{position:absolute;left:6px;bottom:6px;background:var(--negro);color:#fff;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px}
+.pag button{position:absolute;top:4px;right:4px;border:0;border-radius:50%;width:26px;height:26px;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
+#escaner .escPie{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--linea)}
+#escaner .escPie button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:14px;font-size:16px;font-weight:700;border:2px solid var(--negro);background:#fff;color:var(--negro)}
+#escaner .escPie button.primario{background:var(--naranja);border-color:var(--naranja);color:#fff}
+#escaner .escPie button:disabled{opacity:.45}
+#recorte{position:fixed;inset:0;z-index:23;background:#111;display:none;flex-direction:column}
+#recorte.abierto{display:flex}
+#recLienzo{position:relative;flex:1;min-height:0;margin:calc(8px + env(safe-area-inset-top)) 8px 8px;touch-action:none}
+#recCanvas{position:absolute;inset:0}
+.esquina{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid var(--ambar);background:rgba(242,169,0,.25);touch-action:none}
+#recFiltros{display:flex;gap:8px;justify-content:center;padding:4px 10px}
+#recFiltros button{border:1px solid #555;background:#222;color:#ddd;border-radius:999px;padding:8px 14px;font-weight:600}
+#recFiltros button.activo{background:var(--ambar);border-color:var(--ambar);color:var(--negro)}
+#recAcciones{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
+#recAcciones button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:13px 8px;font-weight:700;background:#2a2a2a;color:#fff;font-size:15px}
+#recAcciones #recUsar{flex:1.4;background:var(--naranja)}
 #otraCamara{display:flex;align-items:center;gap:6px;margin:10px auto 0;border:0;background:none;color:var(--gris);text-decoration:underline;font-size:14px}
 #vivo{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column}
 #vivo.abierto{display:flex}
@@ -178,6 +209,9 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
  <symbol id="i-abajo" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
  <symbol id="i-nube" viewBox="0 0 24 24"><path d="M12 13v8M8 17l4-4 4 4"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></symbol>
+ <symbol id="i-doc" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/></symbol>
+ <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-girar" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></symbol>
  <symbol id="i-movil" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
 </svg>
 <header>
@@ -200,6 +234,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <button id="disparar"><svg class="ic"><use href="#i-camara"/></svg> Tomar foto</button>
 <input type="file" id="camara" accept="image/*" capture="environment" hidden>
 <button id="otraCamara"></button>
+<button id="escanear"><svg class="ic"><use href="#i-doc"/></svg> Escanear documento</button>
+<input type="file" id="camaraDoc" accept="image/*" capture="environment" hidden>
 <div id="procesando">Estampando la foto…</div>
 <div class="estado">
   <span><span class="punto" id="ptoGps"></span><b id="txtGps">Buscando GPS…</b></span>
@@ -293,6 +329,24 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 </div></dialog>
 
 <div id="aviso" role="status"></div>
+<section id="escaner" aria-label="Escanear documento">
+  <div class="escCab"><button id="escCerrar" aria-label="Volver"><svg class="ic"><use href="#i-ant"/></svg></button><b>Escanear documento</b><span id="escN"></span></div>
+  <div class="escCuerpo">
+    <label class="rot2" for="escTipo">Tipo de documento</label><select id="escTipo"></select>
+    <label class="rot2" for="escElem">Elemento</label>
+    <div class="buscador"><svg class="ic"><use href="#i-buscar"/></svg><input id="escElem" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="sentences" placeholder="Ej: Losa NP2"></div>
+    <div class="listaT" id="escLista"></div>
+    <label class="rot2">Páginas</label>
+    <p class="vacio" id="escVacio">Toca «Agregar página» y toma la foto de la hoja sobre una superficie oscura, con buena luz. Después ajustas las esquinas.</p>
+    <div id="escPaginas"></div>
+  </div>
+  <div class="escPie"><button id="escAgregar"><svg class="ic"><use href="#i-mas"/></svg>Agregar página</button><button id="escPdf" class="primario" disabled><svg class="ic"><use href="#i-guardar"/></svg>Crear PDF</button></div>
+</section>
+<section id="recorte" aria-label="Ajustar la hoja">
+  <div id="recLienzo"><canvas id="recCanvas"></canvas><div class="esquina"></div><div class="esquina"></div><div class="esquina"></div><div class="esquina"></div></div>
+  <div id="recFiltros"><button data-f="doc">Documento</button><button data-f="gris">Gris</button><button data-f="color">Color</button></div>
+  <div id="recAcciones"><button id="recCancelar"><svg class="ic"><use href="#i-cerrar"/></svg></button><button id="recGirar"><svg class="ic"><use href="#i-girar"/></svg>Girar</button><button id="recRepetir"><svg class="ic"><use href="#i-camara"/></svg>Repetir</button><button id="recUsar">Usar página</button></div>
+</section>
 
 <script>/* piexifjs 1.0.6 - MIT License (c) 2014 Hiroaki Matoba */
 /* piexifjs
@@ -2780,7 +2834,7 @@ SOFTWARE.
 </script>
 <script>
 "use strict";
-const VERSION = "1.16";
+const VERSION = "1.17";
 const LOGO = "data:image/png;base64,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";
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const DIAS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
@@ -3253,8 +3307,8 @@ const BD = new Promise((ok, mal) => { try { const r = indexedDB.open("camaraObra
 async function bdOp(modo, fn) { const db = await BD; if (!db) return null; return new Promise(ok => { try { const tx = db.transaction("bandeja", modo), st = tx.objectStore("bandeja"); const r = fn(st); tx.oncomplete = () => ok(r && r.result); tx.onerror = () => ok(null); } catch (e) { ok(null); } }); }
 const bandejaGuardar = it => bdOp("readwrite", st => st.put({ id: it.id, nombre: it.nombre, blob: it.blob, t: it.t, raw: it.raw, info: it.info }));
 const bandejaQuitar = id => bdOp("readwrite", st => st.delete(id));
-const bandejaVaciar = () => bdOp("readwrite", st => st.clear());
-async function bandejaCargar() { const todos = await bdOp("readonly", st => st.getAll()); (todos || []).sort((a, b) => a.t - b.t).forEach(it => pendientes.push(conMini(it))); pintarBandeja(); }
+const bandejaVaciar = async () => { const todos = await bdOp("readonly", st => st.getAll()) || []; for (const x of todos) if (!x.pagina) await bandejaQuitar(x.id); };   // solo las fotos, no las páginas escaneadas
+async function bandejaCargar() { const todos = (await bdOp("readonly", st => st.getAll()) || []).filter(x => !x.pagina); (todos || []).sort((a, b) => a.t - b.t).forEach(it => pendientes.push(conMini(it))); pintarBandeja(); }
 function pintarBandeja() {
   $("bandeja").innerHTML = ""; $("nPend").textContent = pendientes.length; $("vacio").style.display = pendientes.length ? "none" : "block";
   $("guardar").disabled = $("limpiar").disabled = !pendientes.length;
@@ -3442,6 +3496,282 @@ guardarDatos();
 pintarTitulos(); bandejaCargar(); mostrarLugar(); iniciarGps(); pintarModo();
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 window.__prueba = { estampar, exif, hora12, gpsTexto, dibujarSello };
+// ================================================================ ESCÁNER DE DOCUMENTOS (v1.17)
+// Fotos de hojas físicas (listas de liberación, actas, remisiones…) → recorte con 4 esquinas → hoja derecha
+// (corrección de perspectiva) → filtro "Documento" (fondo blanco, texto negro) → PDF de varias páginas.
+// Todo se hace en el teléfono, sin internet. Las páginas quedan guardadas (si se cierra la app, siguen ahí).
+const TIPOS_DOC = ["Lista de liberación", "Acta", "Remisión de concreto", "Certificado", "Otro"];
+let escPaginas = [];          // [{id, blob, w, h, url}]
+let rec = null;               // recorte en curso: {img, W, H, pts, filtro, warp}
+
+function escAbrir() {
+  const sel = $("escTipo"); sel.innerHTML = "";
+  TIPOS_DOC.forEach(t => { const o = document.createElement("option"); o.textContent = t; sel.appendChild(o); });
+  sel.value = datos.escTipo || TIPOS_DOC[0];
+  $("escElem").value = datos.escElem || "";
+  escPintarLista(); escPintar();
+  $("escaner").classList.add("abierto");
+}
+function escCerrar() { $("escaner").classList.remove("abierto"); }
+function escPintarLista() {
+  listaTitulos($("escLista"), $("escElem").value, normalizar($("escElem").value), t => {
+    $("escElem").value = t; datos.escElem = t; guardarDatos(); escPintarLista(); $("escElem").blur();
+  });
+}
+function escPintar() {
+  const c = $("escPaginas"); c.innerHTML = "";
+  escPaginas.forEach((p, i) => {
+    const d = document.createElement("div"); d.className = "pag";
+    d.innerHTML = `<img alt=""><span>${i + 1}</span><button aria-label="Quitar página"><svg class="ic"><use href="#i-cerrar"/></svg></button>`;
+    d.querySelector("img").src = p.url;
+    d.querySelector("button").onclick = async () => {
+      if (!confirm(`¿Quitar la página ${i + 1}?`)) return;
+      URL.revokeObjectURL(p.url); escPaginas.splice(i, 1); await bandejaQuitar(p.id); escPintar();
+    };
+    c.appendChild(d);
+  });
+  $("escN").textContent = escPaginas.length ? `${escPaginas.length} pág.` : "";
+  $("escVacio").style.display = escPaginas.length ? "none" : "block";
+  $("escPdf").disabled = !escPaginas.length;
+}
+async function escCargar() {
+  const todos = await bdOp("readonly", st => st.getAll());
+  (todos || []).filter(x => x.pagina).sort((a, b) => a.t - b.t)
+    .forEach(x => escPaginas.push({ id: x.id, blob: x.blob, w: x.w, h: x.h, t: x.t, url: URL.createObjectURL(x.blob) }));
+}
+
+// ---------------------------------------------------------------- 1) foto → detectar la hoja
+function escLeerImagen(file) {
+  return new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error("no se pudo leer la foto")); i.src = URL.createObjectURL(file); });
+}
+async function escNuevaFoto(file) {
+  $("procesando").textContent = "Buscando la hoja…"; $("procesando").style.display = "block";
+  try {
+    const img = await escLeerImagen(file);
+    const k = Math.min(1, 2600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const cv = document.createElement("canvas"); cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(img.src);
+    rec = { img: cv, W: cv.width, H: cv.height, pts: detectarHoja(cv), filtro: datos.escFiltro || "doc" };
+    abrirRecorte();
+  } catch (e) { aviso("No se pudo procesar la foto: " + e.message, 5000); }
+  finally { $("procesando").style.display = "none"; $("procesando").textContent = "Estampando la foto…"; }
+}
+// la hoja (clara) sobre el fondo: umbral de Otsu, la mancha clara más grande y sus 4 esquinas extremas
+function detectarHoja(cv) {
+  const s = Math.min(1, 360 / Math.max(cv.width, cv.height)), w = Math.max(1, Math.round(cv.width * s)), h = Math.max(1, Math.round(cv.height * s));
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.drawImage(cv, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data, gris = new Uint8Array(w * h), hist = new Array(256).fill(0);
+  for (let i = 0; i < w * h; i++) { const v = (d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114) | 0; gris[i] = v; hist[v]++; }
+  let total = w * h, suma = 0, sB = 0, wB = 0, mejor = 0, umbral = 128;
+  for (let t = 0; t < 256; t++) suma += t * hist[t];
+  for (let t = 0; t < 256; t++) { wB += hist[t]; if (!wB) continue; const wF = total - wB; if (!wF) break; sB += t * hist[t];
+    const mB = sB / wB, mF = (suma - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF); if (v > mejor) { mejor = v; umbral = t; } }
+  const marca = new Int32Array(w * h).fill(-1); let mayor = null;
+  for (let i0 = 0; i0 < w * h; i0++) {
+    if (gris[i0] <= umbral || marca[i0] !== -1) continue;
+    const pila = [i0]; marca[i0] = i0; let n = 0, tl = [0, 0, 1e9], br = [0, 0, -1e9], tr = [0, 0, -1e9], bl = [0, 0, 1e9];
+    while (pila.length) {
+      const i = pila.pop(), x = i % w, y = (i / w) | 0; n++;
+      if (x + y < tl[2]) tl = [x, y, x + y]; if (x + y > br[2]) br = [x, y, x + y];
+      if (x - y > tr[2]) tr = [x, y, x - y]; if (x - y < bl[2]) bl = [x, y, x - y];
+      for (const j of [i - 1, i + 1, i - w, i + w]) {
+        if (j < 0 || j >= w * h || marca[j] !== -1 || gris[j] <= umbral) continue;
+        if ((j === i - 1 && x === 0) || (j === i + 1 && x === w - 1)) continue;
+        marca[j] = i0; pila.push(j);
+      }
+    }
+    if (!mayor || n > mayor.n) mayor = { n, tl, tr, br, bl };
+  }
+  const defecto = [[0.06, 0.06], [0.94, 0.06], [0.94, 0.94], [0.06, 0.94]].map(([a, b]) => [a * cv.width, b * cv.height]);
+  if (!mayor || mayor.n < w * h * 0.15 || mayor.n > w * h * 0.985) return defecto;
+  return [mayor.tl, mayor.tr, mayor.br, mayor.bl].map(([x, y]) => [x / s, y / s]);
+}
+
+// ---------------------------------------------------------------- 2) ajustar esquinas
+function abrirRecorte() { $("recorte").classList.add("abierto"); escMarcarFiltro(); requestAnimationFrame(pintarRecorte); }
+function vistaRecorte() {
+  const caja = $("recLienzo").getBoundingClientRect(), k = Math.min(caja.width / rec.W, caja.height / rec.H);
+  return { k, ox: (caja.width - rec.W * k) / 2, oy: (caja.height - rec.H * k) / 2, caja };
+}
+function pintarRecorte() {
+  if (!rec) return;
+  const cv = $("recCanvas"), v = vistaRecorte(), dpr = devicePixelRatio || 2;
+  cv.width = Math.round(v.caja.width * dpr); cv.height = Math.round(v.caja.height * dpr);
+  cv.style.width = v.caja.width + "px"; cv.style.height = v.caja.height + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, v.caja.width, v.caja.height);
+  g.drawImage(rec.img, v.ox, v.oy, rec.W * v.k, rec.H * v.k);
+  const P = rec.pts.map(([x, y]) => [v.ox + x * v.k, v.oy + y * v.k]);
+  g.fillStyle = "rgba(0,0,0,.45)"; g.beginPath(); g.rect(0, 0, v.caja.width, v.caja.height);
+  g.moveTo(...P[0]); [P[3], P[2], P[1]].forEach(p => g.lineTo(...p)); g.closePath(); g.fill("evenodd");
+  g.strokeStyle = "#F2A900"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(...P[0]); P.slice(1).forEach(p => g.lineTo(...p)); g.closePath(); g.stroke();
+  document.querySelectorAll(".esquina").forEach((el, i) => { el.style.left = P[i][0] + "px"; el.style.top = P[i][1] + "px"; });
+}
+(() => {
+  let arr = -1;
+  document.querySelectorAll(".esquina").forEach((el, i) => {
+    el.addEventListener("pointerdown", e => { arr = i; el.setPointerCapture(e.pointerId); e.preventDefault(); });
+    el.addEventListener("pointermove", e => {
+      if (arr !== i || !rec) return; const v = vistaRecorte();
+      rec.pts[i] = [Math.max(0, Math.min(rec.W, (e.clientX - v.caja.left - v.ox) / v.k)), Math.max(0, Math.min(rec.H, (e.clientY - v.caja.top - v.oy) / v.k))];
+      pintarRecorte();
+    });
+    el.addEventListener("pointerup", () => { arr = -1; });
+  });
+})();
+window.addEventListener("resize", () => { if (rec && $("recorte").classList.contains("abierto")) setTimeout(pintarRecorte, 200); });
+function escMarcarFiltro() { document.querySelectorAll("#recFiltros button").forEach(b => b.classList.toggle("activo", b.dataset.f === rec.filtro)); }
+
+// ---------------------------------------------------------------- 3) enderezar (homografía) y filtrar
+function homografia(src, dst) {   // H tal que dst → src
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = dst[i], [u, v] = src[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+  }
+  for (let c = 0; c < 8; c++) {      // Gauss con pivoteo
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    for (let r = 0; r < 8; r++) { if (r === c) continue; const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c]; }
+  }
+  return b.map((v, i) => v / A[i][i]);
+}
+function enderezar() {
+  const [tl, tr, br, bl] = rec.pts, dist = (a, c) => Math.hypot(a[0] - c[0], a[1] - c[1]);
+  let W = Math.max(dist(tl, tr), dist(bl, br)), H = Math.max(dist(tl, bl), dist(tr, br));
+  const k = 2000 / Math.max(W, H); W = Math.round(W * k); H = Math.round(H * k);
+  const m = homografia(rec.pts, [[0, 0], [W - 1, 0], [W - 1, H - 1], [0, H - 1]]);
+  const sd = rec.img.getContext("2d").getImageData(0, 0, rec.W, rec.H).data, SW = rec.W, SH = rec.H;
+  const out = document.createElement("canvas"); out.width = W; out.height = H;
+  const og = out.getContext("2d"), od = og.createImageData(W, H), o = od.data;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const z = m[6] * x + m[7] * y + 1, u = (m[0] * x + m[1] * y + m[2]) / z, v = (m[3] * x + m[4] * y + m[5]) / z;
+    const x0 = Math.max(0, Math.min(SW - 2, u | 0)), y0 = Math.max(0, Math.min(SH - 2, v | 0)), fx = Math.min(1, Math.max(0, u - x0)), fy = Math.min(1, Math.max(0, v - y0));
+    const i00 = (y0 * SW + x0) * 4, i10 = i00 + 4, i01 = i00 + SW * 4, i11 = i01 + 4, j = (y * W + x) * 4;
+    for (let c = 0; c < 3; c++) o[j + c] = (sd[i00 + c] * (1 - fx) + sd[i10 + c] * fx) * (1 - fy) + (sd[i01 + c] * (1 - fx) + sd[i11 + c] * fx) * fy;
+    o[j + 3] = 255;
+  }
+  og.putImageData(od, 0, 0);
+  return out;
+}
+function filtrar(cv, filtro) {
+  if (filtro === "color") return cv;
+  const W = cv.width, H = cv.height, g = cv.getContext("2d"), im = g.getImageData(0, 0, W, H), d = im.data;
+  const gris = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) gris[i] = d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114;
+  let fondo = null;
+  if (filtro === "doc") {   // iluminación del papel (versión muy borrosa de la hoja) para dejar el fondo blanco parejo
+    const pw = Math.max(8, Math.round(W / 24)), ph = Math.max(8, Math.round(H / 24)), p = document.createElement("canvas"); p.width = pw; p.height = ph;
+    const pg = p.getContext("2d"); pg.filter = "blur(2px)"; pg.drawImage(cv, 0, 0, pw, ph);
+    const b = document.createElement("canvas"); b.width = W; b.height = H; const bg = b.getContext("2d"); bg.imageSmoothingQuality = "high"; bg.drawImage(p, 0, 0, W, H);
+    const bd = bg.getImageData(0, 0, W, H).data; fondo = new Float32Array(W * H);
+    for (let i = 0; i < W * H; i++) fondo[i] = Math.max(40, bd[i * 4] * 0.299 + bd[i * 4 + 1] * 0.587 + bd[i * 4 + 2] * 0.114);
+  }
+  // niveles automáticos (percentiles 2 y 98)
+  const hist = new Array(256).fill(0); for (let i = 0; i < W * H; i += 7) hist[Math.min(255, gris[i] | 0)]++;
+  const n = hist.reduce((a, b) => a + b, 0); let acc = 0, lo = 0, hi = 255;
+  for (let t = 0; t < 256; t++) { acc += hist[t]; if (acc < n * 0.02) lo = t; if (acc < n * 0.98) hi = t; }
+  for (let i = 0; i < W * H; i++) {
+    let v;
+    if (fondo) { const r = gris[i] / fondo[i]; v = 255 * Math.min(1, Math.max(0, (r - 0.5) / 0.38)); v = v < 255 ? Math.pow(v / 255, 1.6) * 255 : 255; }
+    else v = 255 * Math.min(1, Math.max(0, (gris[i] - lo) / Math.max(1, hi - lo)));
+    d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v;
+  }
+  g.putImageData(im, 0, 0); return cv;
+}
+async function usarPagina() {
+  $("recUsar").disabled = true; $("recUsar").textContent = "Procesando…";
+  await new Promise(r => setTimeout(r, 30));
+  try {
+    const cv = filtrar(enderezar(), rec.filtro);
+    const blob = await new Promise(ok => cv.toBlob(ok, "image/jpeg", rec.filtro === "color" ? 0.85 : 0.8));
+    const p = { id: "pag" + Date.now(), blob, w: cv.width, h: cv.height, t: Date.now() };
+    await bdOp("readwrite", st => st.put({ ...p, pagina: true }));
+    escPaginas.push({ ...p, url: URL.createObjectURL(blob) });
+    datos.escFiltro = rec.filtro; guardarDatos();
+    rec = null; $("recorte").classList.remove("abierto"); escPintar(); vibrar();
+  } catch (e) { aviso("No se pudo procesar la página: " + e.message, 5000); }
+  finally { $("recUsar").disabled = false; $("recUsar").textContent = "Usar página"; }
+}
+
+// ---------------------------------------------------------------- 4) PDF (A4, una imagen JPEG por página)
+function pdfTexto(t) {   // cadena PDF en UTF-16BE (acepta tildes y ñ)
+  let h = "FEFF"; for (const ch of String(t)) { const c = ch.codePointAt(0); if (c > 0xffff) { const s = c - 0x10000; h += ((0xd800 + (s >> 10)).toString(16).padStart(4, "0") + (0xdc00 + (s & 0x3ff)).toString(16).padStart(4, "0")); } else h += c.toString(16).padStart(4, "0"); }
+  return "<" + h.toUpperCase() + ">";
+}
+async function armarPdf(paginas, info) {
+  const enc = new TextEncoder(), partes = [], offs = [];
+  let largo = 0; const pon = x => { const b = typeof x === "string" ? enc.encode(x) : x; partes.push(b); largo += b.length; };
+  const obj = (n, cuerpo) => { offs[n] = largo; pon(`${n} 0 obj\n`); cuerpo(); pon("\nendobj\n"); };
+  pon("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  const N = paginas.length, kids = paginas.map((_, i) => `${4 + i * 3} 0 R`).join(" ");
+  obj(1, () => pon("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2, () => pon(`<< /Type /Pages /Count ${N} /Kids [${kids}] >>`));
+  const d = new Date(), fecha = `D:${d.getFullYear()}${dos(d.getMonth() + 1)}${dos(d.getDate())}${dos(d.getHours())}${dos(d.getMinutes())}${dos(d.getSeconds())}`;
+  obj(3, () => pon(`<< /Title ${pdfTexto(info.titulo)} /Author ${pdfTexto(info.autor || "")} /Subject ${pdfTexto(info.asunto || "")} /Creator ${pdfTexto("Cámara de Obra " + VERSION)} /Producer ${pdfTexto("Lucía & Co.")} /CreationDate (${fecha}) >>`));
+  for (let i = 0; i < N; i++) {
+    const p = paginas[i], jpg = new Uint8Array(await p.blob.arrayBuffer());
+    const horiz = p.w > p.h, PW = horiz ? 841.89 : 595.28, PH = horiz ? 595.28 : 841.89;
+    const k = Math.min(PW / p.w, PH / p.h), iw = p.w * k, ih = p.h * k, x = (PW - iw) / 2, y = (PH - ih) / 2;
+    const np = 4 + i * 3, nc = np + 1, ni = np + 2;
+    obj(np, () => pon(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im${i} ${ni} 0 R >> >> /Contents ${nc} 0 R >>`));
+    const cont = `q ${iw.toFixed(2)} 0 0 ${ih.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im${i} Do Q`;
+    obj(nc, () => pon(`<< /Length ${cont.length} >>\nstream\n${cont}\nendstream`));
+    obj(ni, () => { pon(`<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`); pon(jpg); pon("\nendstream"); });
+  }
+  const total = 4 + N * 3, xref = largo;
+  let x = `xref\n0 ${total}\n0000000000 65535 f \n`;
+  for (let n = 1; n < total; n++) x += String(offs[n]).padStart(10, "0") + " 00000 n \n";
+  pon(x + `trailer\n<< /Size ${total} /Root 1 0 R /Info 3 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(partes, { type: "application/pdf" });
+}
+function nombrePdf() {
+  const d = new Date(), limpio = t => normalizar(t).replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, " ").trim();
+  const partes = [`${d.getFullYear()}${dos(d.getMonth() + 1)}${dos(d.getDate())}`, limpio($("escTipo").value), limpio($("escElem").value)].filter(Boolean);
+  return partes.join("_") + ".pdf";
+}
+async function escCrearPdf() {
+  if (!escPaginas.length) return;
+  if (!normalizar($("escElem").value) && !confirm("No elegiste el elemento. ¿Crear el PDF así?")) return;
+  $("escPdf").disabled = true;
+  try {
+    const nombre = nombrePdf(), o = obra();
+    const pdf = await armarPdf(escPaginas, { titulo: nombre.replace(/\.pdf$/, ""), autor: datos.usuario, asunto: `${o.nombre} · ${$("escTipo").value} · ${normalizar($("escElem").value)}` });
+    const f = new File([pdf], nombre, { type: "application/pdf" });
+    let ok = false;
+    if (!ES_ANDROID && navigator.canShare && navigator.canShare({ files: [f] })) {
+      try { await navigator.share({ files: [f] }); ok = true; } catch (e) { if (e.name !== "AbortError") aviso("No se pudo compartir: " + e.message, 5000); }
+    } else {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); ok = true;
+    }
+    if (ok && confirm(`PDF listo (${escPaginas.length} pág., ${(pdf.size / 1048576).toFixed(1).replace(".", ",")} MB).\n¿Empezar un documento nuevo? (se quitan estas páginas)`)) {
+      for (const p of escPaginas) { URL.revokeObjectURL(p.url); await bandejaQuitar(p.id); }
+      escPaginas = []; escPintar();
+    }
+  } catch (e) { aviso("No se pudo crear el PDF: " + e.message, 6000); }
+  finally { $("escPdf").disabled = !escPaginas.length; }
+}
+
+// ---------------------------------------------------------------- eventos
+$("escanear").onclick = escAbrir;
+$("escCerrar").onclick = escCerrar;
+$("escTipo").onchange = () => { datos.escTipo = $("escTipo").value; guardarDatos(); };
+$("escElem").addEventListener("input", () => { datos.escElem = $("escElem").value; guardarDatos(); escPintarLista(); });
+$("escAgregar").onclick = () => { $("camaraDoc").value = ""; $("camaraDoc").click(); };
+$("camaraDoc").onchange = () => { const f = $("camaraDoc").files[0]; if (f) escNuevaFoto(f); };
+$("escPdf").onclick = escCrearPdf;
+$("recRepetir").onclick = () => { rec = null; $("recorte").classList.remove("abierto"); $("camaraDoc").value = ""; $("camaraDoc").click(); };
+$("recCancelar").onclick = () => { rec = null; $("recorte").classList.remove("abierto"); };
+$("recUsar").onclick = usarPagina;
+$("recGirar").onclick = () => {   // girar la foto 90° (si la hoja quedó acostada)
+  const c = document.createElement("canvas"); c.width = rec.H; c.height = rec.W; const g = c.getContext("2d");
+  g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(rec.img, 0, 0);
+  rec.pts = rec.pts.map(([x, y]) => [rec.H - y, x]); rec.pts = [rec.pts[3], rec.pts[0], rec.pts[1], rec.pts[2]];
+  rec.img = c; rec.W = c.width; rec.H = c.height; pintarRecorte();
+};
+document.querySelectorAll("#recFiltros button").forEach(b => b.onclick = () => { rec.filtro = b.dataset.f; escMarcarFiltro(); });
+escCargar().then(escPintar);
+
 </script>
 </body>
 </html>
