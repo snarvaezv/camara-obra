@@ -1,7 +1,7 @@
 // Cámara de Obra: funciona sin señal guardando la app en el teléfono.
 // v1.19: abre al instante con la copia guardada (antes esperaba la red y con poca señal quedaba en blanco);
 // la versión nueva se descarga en segundo plano y la app avisa para actualizar.
-const CACHE = "camara-obra-v22";
+const CACHE = "camara-obra-v23";
 const CACHE_OCR = "camara-obra-ocr-v1";   // lector de texto del escáner (~6 MB): se guarda aparte y no se borra con cada versión
 const ARCHIVOS = ["./", "index.html", "manifest.webmanifest", "icono-180.png", "icono-192.png", "icono-512.png"];
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())));
