@@ -1,15 +1,11 @@
 // Cámara de Obra: funciona sin señal guardando la app en el teléfono.
 // v1.19: abre al instante con la copia guardada (antes esperaba la red y con poca señal quedaba en blanco);
 // la versión nueva se descarga en segundo plano y la app avisa para actualizar.
-// v1.22: hay dos copias en el mismo sitio: la estable (raíz) y la de pruebas (/pruebas/). Cada una borra solo
-// sus cachés viejas; la estable no atiende /pruebas/; el lector de texto (OCR) se comparte.
-const CACHE = "camara-obra-v25";
-const PREFIJO = "camara-obra-v";
-const IGNORAR_PRUEBAS = true;
+const CACHE = "camara-obra-v24";
 const CACHE_OCR = "camara-obra-ocr-v1";   // lector de texto del escáner (~6 MB): se guarda aparte y no se borra con cada versión
 const ARCHIVOS = ["./", "index.html", "manifest.webmanifest", "icono-180.png", "icono-192.png", "icono-512.png"];
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())));
-self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith(PREFIJO) && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())));
+self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== CACHE_OCR).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 const conTiempo = (p, ms) => Promise.race([p, new Promise((_, mal) => setTimeout(() => mal(new Error("tiempo")), ms))]);
 async function avisarSiCambio(req, nueva) {
   try {
@@ -25,7 +21,6 @@ async function avisarSiCambio(req, nueva) {
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);
   if (e.request.method !== "GET" || u.origin !== location.origin) return;   // GPS, lugar y clima van directo a internet
-  if (IGNORAR_PRUEBAS && u.pathname.includes("/pruebas/")) return;        // la copia de pruebas se atiende sola
   if (u.pathname.includes("/ocr/")) {                  // primero lo guardado; si no está, se baja y se guarda
     e.respondWith(caches.open(CACHE_OCR).then(c => c.match(e.request).then(r => r || fetch(e.request).then(n => { if (n.ok) c.put(e.request, n.clone()); return n; }))));
     return;
