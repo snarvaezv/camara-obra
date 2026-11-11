@@ -3103,8 +3103,8 @@ window.addEventListener("deviceorientation", e => {
   if (datos.sensor === false) return;
   if (e.beta == null || e.gamma == null) return;
   const b = Math.abs(e.beta), g = e.gamma; let n = giroTel;
-  if (Math.abs(g) > 60 && b < 40) n = g > 0 ? 270 : 90; else if (b > 55 && Math.abs(g) < 30) n = (e.beta > 0 ? 0 : 180);
-  if (n === 180) n = giroTel; // boca abajo: se ignora
+  // v1.25: vertical al revés (180°) también cuenta; boca abajo sobre la mesa (|beta| > 135) se ignora
+  if (Math.abs(g) > 60 && b < 40) n = g > 0 ? 270 : 90; else if (b > 55 && b < 135 && Math.abs(g) < 30) n = (e.beta > 0 ? 0 : 180);
   if (n !== giroTel) { giroTel = n; if (flujo) { congelar(); programarVista(); } }
 });
 // v1.25: el sensor reacciona antes que iOS. Si la rotación está desbloqueada, iOS girará la pantalla en ~0,5 s:
@@ -3118,7 +3118,7 @@ function programarVista() {
     if (anguloUI() !== 0) return;                       // iOS giró la pantalla: manda la pantalla
     if (giroTel != null && giroTel % 180 !== 0) rotBloqueada = true;
     giroVista = giroTel; if (flujo) pintarCapa();
-  }, rotBloqueada ? 120 : 700);
+  }, rotBloqueada || giroTel === 180 || giroVista === 180 ? 120 : 700);   // el iPhone nunca gira la pantalla a 180°
 }
 function pedirSensor() { if (datos.sensor === false) { giroTel = null; return; } try { if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) DeviceOrientationEvent.requestPermission().catch(() => { }); } catch (e) { } }
 // en qué ángulo viene el cuadro de la cámara, cuánto girarlo para mostrarlo y cuánto para la foto final
@@ -3318,7 +3318,9 @@ let claveCapa = "", sello2 = null;
 function pintarCapa() {
   const v = $("video"), cv = $("capaSello"); if (!v.videoWidth) return;
   const geo = geometria(), cruz = geo.mostrar % 180 !== 0;
-  $("vivo").style.setProperty("--giro", (geo.extra > 180 ? geo.extra - 360 : geo.extra) + "deg");
+  let gi = geo.extra > 180 ? geo.extra - 360 : geo.extra;
+  if (gi === 180 && pintarCapa.giro < 0) gi = -180;      // que los botones giren por el lado corto
+  pintarCapa.giro = gi; $("vivo").style.setProperty("--giro", gi + "deg");
   const caja0 = $("visor").getBoundingClientRect(), clave = [v.videoWidth, v.videoHeight, geo.mostrar, geo.extra, caja0.width, caja0.height, devicePixelRatio].join();
   if (clave === claveCapa && cv.width) { redibujarSello(); return; }   // nada cambió de lugar: solo se actualiza el texto (hora)
   claveCapa = clave;
